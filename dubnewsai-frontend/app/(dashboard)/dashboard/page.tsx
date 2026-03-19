@@ -9,21 +9,21 @@ import { NewsFeed } from "@/components/news/NewsFeed"
 export default function DashboardPage() {
   return (
     <AuthGuard>
-      <div className="space-y-8">
+      <div className="min-w-0 space-y-8">
         <HeroSection />
         <LiveTicker />
         <QuickStats />
 
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <NewsFeed pageSize={8} />
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="min-w-0">
+            <NewsFeed pageSize={6} compact />
           </div>
-          <div>
+          <div className="min-w-0">
             <TrendingTopics />
           </div>
         </div>
 
-        <MarketOverview />
+        <MarketOverview compact />
       </div>
     </AuthGuard>
   )

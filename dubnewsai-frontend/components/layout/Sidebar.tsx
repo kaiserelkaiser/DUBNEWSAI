@@ -24,19 +24,19 @@ export function Sidebar() {
     : baseItems
 
   return (
-    <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-[18.5rem] lg:block">
-      <div className="m-4 flex h-[calc(100%-2rem)] flex-col rounded-[2rem] border border-white/10 bg-[#080a0e]/88 p-4 shadow-[0_32px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-2xl">
+    <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-[18.5rem] overflow-x-hidden lg:block">
+      <div className="m-4 flex h-[calc(100%-2rem)] min-h-0 flex-col rounded-[2rem] border border-white/10 bg-[#080a0e]/88 p-4 shadow-[0_32px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-2xl">
         <div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-white">
             <Building2 className="h-4 w-4 text-amber-300" />
             Dubai Intelligence Desk
           </div>
           <p className="mt-2 text-sm leading-6 text-white/58">
-            Editorial news, market structure, and live signal coverage in one operator workspace.
+            One workspace for Dubai news, listed developers, market signals, and context that actually helps you act.
           </p>
         </div>
 
-        <nav className="mt-5 space-y-1.5">
+        <nav className="mt-5 flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden pr-1">
           {items.map((item) => {
             const Icon = item.icon
             const active = pathname === item.href

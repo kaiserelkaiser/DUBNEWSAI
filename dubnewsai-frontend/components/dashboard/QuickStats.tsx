@@ -9,28 +9,28 @@ import { formatCompactNumber } from "@/lib/utils/formatters"
 
 const cards = [
   {
-    label: "Tracked stocks",
+    label: "Active movers",
     accent: "from-cyan-300/18 to-transparent",
     icon: Activity,
-    caption: "Boards actively watched"
+    caption: "Names visible in the current watch surface"
   },
   {
-    label: "News volume",
+    label: "Live stories",
     accent: "from-amber-300/18 to-transparent",
     icon: Newspaper,
-    caption: "Indexed multi-source stories"
+    caption: "Recent articles available to read right now"
   },
   {
-    label: "Developers watched",
+    label: "Core developers",
     accent: "from-emerald-300/18 to-transparent",
     icon: Building2,
-    caption: "Core companies in rotation"
+    caption: "Key Dubai property names kept in focus"
   }
 ] as const
 
 export function QuickStats() {
-  const { data: stocks } = useMarketData(20)
-  const { data: news } = useNews({ page: 1, page_size: 12 })
+  const { data: stocks } = useMarketData(12)
+  const { data: news } = useNews({ page: 1, page_size: 6 })
 
   const values = [
     stocks?.length || 0,
@@ -71,7 +71,7 @@ export function QuickStats() {
               </div>
               <div className="mt-8 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-emerald-200/82">
                 <ArrowUpRight className="h-3.5 w-3.5" />
-                Streaming in real time
+                Refreshed continuously
               </div>
             </div>
           </motion.article>

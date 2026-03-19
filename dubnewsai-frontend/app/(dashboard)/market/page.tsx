@@ -7,29 +7,29 @@ export default function MarketPage() {
     <div className="space-y-8">
       <PremiumPageHero
         eyebrow="Market command"
-        title="A market board should feel like a capital desk, not a dashboard template."
-        description="Core UAE boards, global real-estate names, macro pressure, FX, and Dubai weather now sit in one command surface designed for reading conviction quickly."
+        title="Track Dubai markets with the context serious decisions require."
+        description="Follow UAE-listed names, global real-estate benchmarks, FX, macro indicators, and Dubai weather in one board built to help you brief fast and go deep when needed."
         chips={["UAE boards", "Global real-estate", "Macro signals", "FX + weather"]}
         stats={[
           {
             label: "Primary lens",
             value: "UAE + GCC capital flow",
-            hint: "Built around local real-estate and adjacent finance names"
+            hint: "Focused on local developers and the broader capital picture"
           },
           {
             label: "Context layer",
             value: "Macro + FX + weather",
-            hint: "More than price tiles, less than a cluttered terminal"
+            hint: "The surrounding signals that shape price interpretation"
           },
           {
             label: "Decision speed",
             value: "Brief in seconds",
-            hint: "Clear provider, quality, and fallback visibility"
+            hint: "Provider, quality, and fallback visibility stay in the interface"
           },
           {
-            label: "Experience",
-            value: "Boardroom terminal",
-            hint: "Premium depth without noisy complexity"
+            label: "Coverage mode",
+            value: "Signal, then depth",
+            hint: "Start with the snapshot and expand only when necessary"
           }
         ]}
         tone="amber"

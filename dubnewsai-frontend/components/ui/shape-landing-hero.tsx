@@ -83,10 +83,10 @@ type HeroGeometricProps = {
 }
 
 export function HeroGeometric({
-  badge = "Design Collective",
-  title1 = "Elevate Your Digital Vision",
-  title2 = "Crafting Exceptional Websites",
-  description = "Crafting exceptional digital experiences through innovative design and cutting-edge technology.",
+  badge = "Dubai Market Intelligence",
+  title1 = "Know Dubai",
+  title2 = "before the market moves",
+  description = "Track Dubai market news, listed developers, FX, and macro context in one premium intelligence platform.",
   actions,
   meta,
   children

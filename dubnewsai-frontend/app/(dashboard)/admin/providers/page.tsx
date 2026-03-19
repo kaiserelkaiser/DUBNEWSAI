@@ -123,7 +123,7 @@ export default function ProvidersAdminPage() {
         <PremiumPageHero
           eyebrow="Provider operations"
           title="Operational health should feel like mission control, not a detached admin table."
-          description="Provider monitoring now sits inside the same design language as the rest of the product, so source health, circuit state, and failure patterns feel like part of the platform instead of a separate tool."
+          description="Monitor source health, circuit state, and failure patterns from one operations surface so provider reliability stays visible and actionable across the platform."
           chips={["Live health", "Circuit control", "Source quality", "Operational insight"]}
           stats={[
             {

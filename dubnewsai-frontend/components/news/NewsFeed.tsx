@@ -11,10 +11,12 @@ import { useNews } from "@/lib/hooks/useNews"
 
 export function NewsFeed({
   pageSize = 8,
-  showBrowseLink = true
+  showBrowseLink = true,
+  compact = false
 }: {
   pageSize?: number
   showBrowseLink?: boolean
+  compact?: boolean
 }) {
   const { data, isLoading, isError } = useNews({ page: 1, page_size: pageSize })
 
@@ -36,33 +38,26 @@ export function NewsFeed({
 
   const articles = data?.articles || []
   const [featured, ...remaining] = articles
-  const railStories = remaining.slice(0, 4)
-  const gridStories = remaining.slice(4)
+  const railStories = remaining.slice(0, compact ? 3 : 4)
+  const gridStories = remaining.slice(compact ? 3 : 4)
 
   return (
     <section className="space-y-8">
-      <div className="panel-premium relative overflow-hidden p-6 sm:p-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.1),transparent_22%)]" />
-        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      {compact ? (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.32em] text-white/56">
               <Newspaper className="h-3.5 w-3.5 text-cyan-200" />
-              Multi-source editorial stream
+              News snapshot
             </div>
-            <h2 className="max-w-3xl text-balance text-3xl font-semibold leading-tight text-white sm:text-4xl">
-              The feed now behaves like a publication front, not a generic news grid.
+            <h2 className="max-w-3xl text-balance text-2xl font-semibold leading-tight text-white sm:text-3xl">
+              The stories that are shaping today’s Dubai narrative.
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-white/56 sm:text-base">
-              Lead story, secondary rail, deduped provider coverage, and richer metadata so users can evaluate importance before they click.
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
               {data?.total || 0} indexed stories
-            </div>
-            <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
-              {articles.filter((article) => (article.duplicate_count || 0) > 1).length} cross-source matches
             </div>
             {showBrowseLink ? (
               <Link
@@ -75,7 +70,43 @@ export function NewsFeed({
             ) : null}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="panel-premium relative overflow-hidden p-6 sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.1),transparent_22%)]" />
+          <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.32em] text-white/56">
+                <Newspaper className="h-3.5 w-3.5 text-cyan-200" />
+                Multi-source editorial stream
+              </div>
+              <h2 className="max-w-3xl text-balance text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                Read the Dubai story with context before you open the source.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-white/56 sm:text-base">
+                Lead coverage, supporting stories, source visibility, and duplicate detection help you understand what matters without digging through fragmented feeds.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
+                {data?.total || 0} indexed stories
+              </div>
+              <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
+                {articles.filter((article) => (article.duplicate_count || 0) > 1).length} cross-source matches
+              </div>
+              {showBrowseLink ? (
+                <Link
+                  href="/news"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white/92"
+                >
+                  Browse full feed
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
 
       {featured ? (
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -126,7 +157,7 @@ export function NewsFeed({
 
       {gridStories.length ? (
         <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
-          {gridStories.map((article, index) => (
+          {gridStories.slice(0, compact ? 2 : gridStories.length).map((article, index) => (
             <motion.div
               key={article.id}
               initial={{ opacity: 0, y: 24 }}

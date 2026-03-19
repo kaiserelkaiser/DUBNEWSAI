@@ -25,7 +25,7 @@ export function LiveTicker() {
             <Activity className="h-3.5 w-3.5 text-emerald-300" />
             Market pulse ribbon
           </div>
-          <p className="mt-3 text-sm text-white/58">Live movers, price context, and feed health in a single continuously moving band.</p>
+          <p className="mt-3 text-sm text-white/58">Track the names moving across Dubai and the wider watchlist without leaving the dashboard.</p>
         </div>
         <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
           {items.length} symbols in rotation

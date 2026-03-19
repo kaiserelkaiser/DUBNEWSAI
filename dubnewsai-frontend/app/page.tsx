@@ -4,12 +4,12 @@ import { motion } from "framer-motion"
 import {
   ArrowRight,
   BarChart3,
+  BellRing,
   Building2,
   CandlestickChart,
   Globe2,
   Radar,
   ShieldCheck,
-  Sparkles,
   Waves
 } from "lucide-react"
 import Link from "next/link"
@@ -21,8 +21,8 @@ import { SparklesCore } from "@/components/ui/sparkles"
 
 const commandStats = [
   { label: "Live feeds", value: "20+" },
-  { label: "Market lenses", value: "DFM + ADX + Global" },
-  { label: "Alert cadence", value: "Near real time" }
+  { label: "Coverage", value: "News + Equities + FX" },
+  { label: "Update cycle", value: "Minutes, not hours" }
 ] as const
 
 const bentoCards: ReadonlyArray<{
@@ -34,80 +34,80 @@ const bentoCards: ReadonlyArray<{
 }> = [
   {
     eyebrow: "Signal Density",
-    title: "News, market structure, macro, FX, and local context in one surface.",
+    title: "News, listed developers, FX, macro, and market context in one platform.",
     copy:
-      "DUBNEWSAI is built for investors, operators, and advisors who need more than a basic feed. Every signal is layered, ranked, and designed for action.",
+      "DUBNEWSAI connects the story, the symbol, and the wider market backdrop so users can understand what is happening in Dubai without stitching tools together.",
     icon: Radar,
     span: "lg:col-span-2"
   },
   {
     eyebrow: "Coverage",
-    title: "UAE-first intelligence.",
-    copy: "Dubai property, listed developers, macro indicators, currencies, and breaking regional stories without dead gaps.",
+    title: "Dubai and UAE market intelligence.",
+    copy: "Track property headlines, DFM and ADX names, business updates, and regional context from multiple sources in one flow.",
     icon: Globe2
   },
   {
-    eyebrow: "Quality",
-    title: "Provider-aware orchestration.",
-    copy: "Fallback logic, deduplication, and source scoring prevent noisy or empty states from taking over the experience.",
+    eyebrow: "Trust",
+    title: "Provider-aware intelligence.",
+    copy: "Source context, fallback handling, and enrichment signals help users judge confidence instead of treating every datapoint the same.",
     icon: ShieldCheck
   },
   {
-    eyebrow: "Market",
-    title: "Designed for active monitoring.",
-    copy: "Indices, watchlists, FX pairs, and contextual headlines move together so users can understand cause, not just price.",
-    icon: CandlestickChart
+    eyebrow: "Workflow",
+    title: "Built for active monitoring.",
+    copy: "Watch movers, read the story, and react faster with alerts, on-platform article detail, and market context side by side.",
+    icon: BellRing
   },
   {
-    eyebrow: "Product",
-    title: "Editorial design, not dashboard clutter.",
-    copy: "Landing experiences and content surfaces are built to feel premium, calm, and high-trust instead of noisy and template-driven.",
-    icon: Sparkles,
+    eyebrow: "Audience",
+    title: "Made for investors, brokers, operators, and advisors.",
+    copy: "DUBNEWSAI turns fragmented Dubai market signals into a readable command center that supports faster and more confident decisions.",
+    icon: CandlestickChart,
     span: "lg:col-span-2"
   }
 ]
 
 const intelligenceRows = [
   {
-    title: "Market pulse ribbon",
-    text: "A cinematic header band that can surface movers, FX, DFM/ADX direction, and economic pressure in one glance.",
+    title: "Live market briefings",
+    text: "Follow UAE symbols, indices, FX, and macro pressure without switching between disconnected dashboards.",
     icon: Waves
   },
   {
-    title: "Editorial news architecture",
-    text: "Lead story, secondary story rail, and grouped source coverage so important stories stop looking like a flat card list.",
+    title: "Readable news detail",
+    text: "Open a story and read the important context directly on DUBNEWSAI before deciding whether you need the original source.",
     icon: Building2
   },
   {
-    title: "Research-grade snapshots",
-    text: "Short-form executive summaries paired with direct underlying sources for faster reading without sacrificing traceability.",
+    title: "Decision-ready dashboards",
+    text: "See only the most useful market and news signals first, then go deeper into dedicated pages when you need more detail.",
     icon: BarChart3
   }
 ] as const
 
 export default function LandingPage() {
   return (
-    <div className="bg-[#050506] text-white">
+    <div className="overflow-x-hidden bg-[#050506] text-white">
       <LandingNav />
 
       <HeroGeometric
-        badge="Dubai Intelligence Layer"
-        title1="Rare signal design"
-        title2="for a serious market platform"
-        description="A new DUBNEWSAI front door built like a premium product, not a generic dashboard. Multi-source market intelligence, editorial-grade news presentation, and a visual system that looks expensive because it is intentional."
+        badge="Dubai Market Intelligence"
+        title1="Know Dubai"
+        title2="before the market moves"
+        description="DUBNEWSAI brings together Dubai market news, listed developers, FX, macro indicators, and live alerts so investors and operators can act with context instead of guesswork."
         actions={
           <>
             <Link
               href="/news"
               className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white/90"
             >
-              Explore live intelligence
+              Explore news
             </Link>
             <Link
-              href="/register"
+              href="/market"
               className="inline-flex items-center justify-center rounded-full border border-white/12 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
             >
-              Request premium access
+              View market
             </Link>
           </>
         }
@@ -141,17 +141,17 @@ export default function LandingPage() {
                 <SparklesCore
                   background="transparent"
                   minSize={0.4}
-                  maxSize={1.2}
-                  particleDensity={900}
+                  maxSize={1}
+                  particleDensity={180}
                   className="absolute inset-0 h-full w-full"
                   particleColor="#f8fafc"
-                  speed={0.9}
+                  speed={0.6}
                 />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.24),transparent_18%),linear-gradient(180deg,rgba(8,15,26,0)_0%,rgba(8,15,26,0.85)_90%)]" />
                 <div className="absolute inset-x-8 bottom-8">
-                  <div className="text-[10px] uppercase tracking-[0.45em] text-cyan-100/50">Signal lattice</div>
+                  <div className="text-[10px] uppercase tracking-[0.45em] text-cyan-100/50">Why DUBNEWSAI</div>
                   <h2 className="mt-4 max-w-md text-4xl font-semibold leading-tight tracking-[-0.04em]">
-                    Design language that makes data feel collected, not dumped.
+                    One place to read the story, track the symbol, and understand the context.
                   </h2>
                 </div>
               </div>
@@ -197,13 +197,12 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.25 }}
               transition={{ duration: 0.7 }}
             >
-              <p className="text-[10px] uppercase tracking-[0.45em] text-amber-200/58">Landing direction</p>
+              <p className="text-[10px] uppercase tracking-[0.45em] text-amber-200/58">How the platform helps</p>
               <h2 className="mt-5 max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.04em] sm:text-5xl">
-                The new frontend should read like a financial publication and move like a product launch.
+                Built to help users understand what matters in Dubai, faster.
               </h2>
               <p className="mt-6 max-w-xl text-base leading-8 text-white/58">
-                This first pass resets the public face of the platform: stronger hierarchy, richer motion, a premium palette,
-                and a visual system ready to scale into the rest of the app instead of collapsing into template cards.
+                From breaking headlines and developer coverage to FX, macro, and market boards, DUBNEWSAI turns scattered information into one clear operating view.
               </p>
             </motion.div>
 
@@ -249,13 +248,12 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.1),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.1),transparent_22%)]" />
             <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.45em] text-white/46">Phase one shipped</p>
+                <p className="text-[10px] uppercase tracking-[0.45em] text-white/46">Start from one source of truth</p>
                 <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-[-0.04em] sm:text-5xl">
-                  Landing page rebuilt around motion, atmosphere, and information hierarchy.
+                  Follow Dubai real-estate news and market intelligence from one premium platform.
                 </h2>
                 <p className="mt-5 max-w-2xl text-base leading-8 text-white/56">
-                  Next we can carry the same system into the news index, article detail, market overview, dashboards, and
-                  premium user flows instead of redesigning page by page without a common visual language.
+                  Open the news feed, monitor the market board, and move into deeper analytics or alerts only when you need them. Every page is tuned to stay fast, readable, and useful under real daily use.
                 </p>
               </div>
 

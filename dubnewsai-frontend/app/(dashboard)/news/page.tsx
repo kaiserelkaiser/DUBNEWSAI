@@ -6,35 +6,35 @@ export default function NewsPage() {
     <div className="space-y-8">
       <PremiumPageHero
         eyebrow="News command"
-        title="Every market signal deserves a front page, not a feed dump."
-        description="Cross-provider Dubai, UAE, market, and property coverage is now framed as an editorial surface with stronger reading hierarchy, source visibility, and full on-platform context before the user ever leaves DUBNEWSAI."
+        title="See what Dubai is talking about, and why it matters."
+        description="Read deduped Dubai, UAE, property, and market coverage with source provenance, cross-source confirmation, and full on-platform context before you open the original publisher."
         chips={["Full article detail", "Source provenance", "Cross-source matches", "Readable metadata"]}
         stats={[
           {
-            label: "Story behavior",
-            value: "Editorial front",
-            hint: "Lead story, secondary rails, and deeper browse flow"
+            label: "Coverage",
+            value: "Dubai + UAE + markets",
+            hint: "A feed built around the topics this platform is made to watch"
           },
           {
             label: "Reading mode",
             value: "On-platform first",
-            hint: "Users understand the story before opening the source"
+            hint: "Understand the story before deciding whether to leave"
           },
           {
-            label: "Coverage depth",
-            value: "Dubai + UAE + market",
-            hint: "Built for property and capital-market context"
+            label: "Source trust",
+            value: "Multi-provider",
+            hint: "Duplicates and provenance help separate noise from signal"
           },
           {
-            label: "Design tone",
-            value: "Luxe newsroom",
-            hint: "Sharper typography, motion, and deliberate spacing"
+            label: "Reading flow",
+            value: "Headline to detail",
+            hint: "Move from scan mode into full story mode without friction"
           }
         ]}
         tone="cyan"
       />
 
-      <NewsFeed pageSize={18} showBrowseLink={false} />
+      <NewsFeed pageSize={15} showBrowseLink={false} />
     </div>
   )
 }
