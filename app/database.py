@@ -22,6 +22,7 @@ else:
             "pool_recycle": 3600,
             "pool_timeout": 30,
             "connect_args": {
+                "statement_cache_size": 0,
                 "server_settings": {
                     "application_name": "dubnewsai",
                     "jit": "off",
