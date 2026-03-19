@@ -604,7 +604,7 @@ class FreeDataAggregator:
             return None
         payload = await self._request_json("https://api.twelvedata.com/quote", params={"symbol": alias, "apikey": settings.TWELVE_DATA_API_KEY})
         price = self._safe_float(payload.get("close") or payload.get("price"))
-        if price is None:
+        if price is None or price <= 0:
             return None
         previous_close = self._safe_float(payload.get("previous_close"))
         return NormalizedMarketQuote(
@@ -631,7 +631,7 @@ class FreeDataAggregator:
         payload = await self._request_json("https://finnhub.io/api/v1/quote", params={"symbol": alias, "token": settings.FINNHUB_API_KEY})
         price = self._safe_float(payload.get("c"))
         previous_close = self._safe_float(payload.get("pc"))
-        if price is None:
+        if price is None or price <= 0:
             return None
         change = price - previous_close if previous_close not in (None, 0) else 0.0
         change_percent = (change / previous_close) * 100 if previous_close not in (None, 0) else 0.0
@@ -660,7 +660,7 @@ class FreeDataAggregator:
             return None
         quote_data = payload[0]
         price = self._safe_float(quote_data.get("price"))
-        if price is None:
+        if price is None or price <= 0:
             return None
         return NormalizedMarketQuote(
             symbol=watchlist.symbol.upper(),
@@ -690,7 +690,7 @@ class FreeDataAggregator:
         if not payload:
             return None
         price = self._safe_float(payload.get("05. price"))
-        if price is None:
+        if price is None or price <= 0:
             return None
         return NormalizedMarketQuote(
             symbol=watchlist.symbol.upper(),

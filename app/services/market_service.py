@@ -77,12 +77,16 @@ class MarketService:
                 logger.warning("Symbol {} not found in watchlist", symbol)
                 return None
 
+            price = float(quote_data.get("05. price", 0) or 0)
+            if price <= 0:
+                return None
+
             market_data = MarketData(
                 symbol=watchlist.symbol,
                 name=watchlist.name,
                 market_type=watchlist.market_type,
                 exchange=watchlist.exchange,
-                price=float(quote_data.get("05. price", 0) or 0),
+                price=price,
                 open_price=float(quote_data.get("02. open", 0) or 0),
                 high_price=float(quote_data.get("03. high", 0) or 0),
                 low_price=float(quote_data.get("04. low", 0) or 0),
@@ -242,6 +246,7 @@ class MarketService:
                 MarketData.symbol,
                 func.max(MarketData.data_timestamp).label("max_timestamp"),
             )
+            .where(MarketData.price > 0)
             .group_by(MarketData.symbol)
             .subquery()
         )
@@ -291,7 +296,7 @@ class MarketService:
                 MarketData.symbol,
                 func.max(MarketData.data_timestamp).label("max_timestamp"),
             )
-            .where(MarketData.symbol.in_(symbols))
+            .where(MarketData.symbol.in_(symbols), MarketData.price > 0)
             .group_by(MarketData.symbol)
             .subquery()
         )
@@ -353,7 +358,7 @@ class MarketService:
 
         result = await db.execute(
             select(MarketData)
-            .where(MarketData.symbol == symbol.upper())
+            .where(MarketData.symbol == symbol.upper(), MarketData.price > 0)
             .order_by(MarketData.data_timestamp.desc())
             .limit(1)
         )
