@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+from uuid import uuid4
 
 from alembic import context
 from sqlalchemy import pool
@@ -39,11 +40,15 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_migrations_online() -> None:
+    connect_args = {"prepared_statement_cache_size": 0}
+    if "pooler.supabase.com" in settings.DATABASE_URL or ":6543/" in settings.DATABASE_URL:
+        connect_args["prepared_statement_name_func"] = lambda: f"__asyncpg_{uuid4()}__"
+
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"statement_cache_size": 0},
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:
