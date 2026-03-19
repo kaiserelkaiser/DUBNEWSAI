@@ -21,6 +21,10 @@ def upgrade() -> None:
     op.drop_index(op.f("ix_market_data_area_name"), table_name="market_data")
     op.rename_table("market_data", "market_data_legacy")
 
+    if connection.dialect.name == "postgresql":
+        op.execute("ALTER TABLE market_data_legacy RENAME CONSTRAINT pk_market_data TO pk_market_data_legacy")
+        op.execute("ALTER SEQUENCE IF EXISTS market_data_id_seq RENAME TO market_data_legacy_id_seq")
+
     op.create_table(
         "market_data",
         sa.Column("symbol", sa.String(length=20), nullable=False),

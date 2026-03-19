@@ -37,6 +37,20 @@ def upgrade() -> None:
     op.drop_index(op.f("ix_news_articles_id"), table_name="news_articles")
     op.rename_table("news_articles", "news_articles_legacy")
 
+    # PostgreSQL keeps underlying constraint/index names after a table rename.
+    # Rename legacy objects out of the way so the rebuilt table can reuse the
+    # canonical names expected by later migrations and the ORM metadata.
+    if connection.dialect.name == "postgresql":
+        op.execute("ALTER TABLE news_articles_legacy RENAME CONSTRAINT pk_news_articles TO pk_news_articles_legacy")
+        op.execute(
+            "ALTER TABLE news_articles_legacy RENAME CONSTRAINT uq_news_articles_slug TO uq_news_articles_slug_legacy"
+        )
+        op.execute(
+            "ALTER TABLE news_articles_legacy RENAME CONSTRAINT fk_news_articles_author_id_users "
+            "TO fk_news_articles_author_id_users_legacy"
+        )
+        op.execute("ALTER SEQUENCE IF EXISTS news_articles_id_seq RENAME TO news_articles_legacy_id_seq")
+
     op.create_table(
         "news_articles",
         sa.Column("title", sa.String(length=500), nullable=False),
