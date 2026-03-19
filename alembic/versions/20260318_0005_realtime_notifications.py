@@ -29,6 +29,11 @@ notification_priority_enum = sa.Enum(
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        notification_type_enum.create(bind, checkfirst=True)
+        notification_priority_enum.create(bind, checkfirst=True)
+
     op.create_table(
         "notifications",
         sa.Column("user_id", sa.Integer(), nullable=False),
@@ -108,3 +113,8 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_notifications_user_id"), table_name="notifications")
     op.drop_index(op.f("ix_notifications_id"), table_name="notifications")
     op.drop_table("notifications")
+
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        notification_priority_enum.drop(bind, checkfirst=True)
+        notification_type_enum.drop(bind, checkfirst=True)

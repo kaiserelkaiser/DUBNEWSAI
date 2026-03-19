@@ -27,6 +27,11 @@ subscription_status_enum = sa.Enum(
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        subscription_plan_enum.create(bind, checkfirst=True)
+        subscription_status_enum.create(bind, checkfirst=True)
+
     op.create_table(
         "subscriptions",
         sa.Column("user_id", sa.Integer(), nullable=False),
@@ -82,8 +87,6 @@ def upgrade() -> None:
         sa.column("currency", sa.String),
     )
     users_table = sa.table("users", sa.column("id", sa.Integer))
-    bind = op.get_bind()
-
     user_rows = bind.execute(sa.select(users_table.c.id)).all()
     for user_row in user_rows:
         bind.execute(
@@ -106,3 +109,8 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_subscriptions_user_id"), table_name="subscriptions")
     op.drop_index(op.f("ix_subscriptions_id"), table_name="subscriptions")
     op.drop_table("subscriptions")
+
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        subscription_status_enum.drop(bind, checkfirst=True)
+        subscription_plan_enum.drop(bind, checkfirst=True)
