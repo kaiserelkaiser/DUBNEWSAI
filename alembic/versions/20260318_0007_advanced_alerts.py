@@ -2,6 +2,7 @@
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -11,7 +12,7 @@ branch_labels = None
 depends_on = None
 
 
-alert_type_enum = sa.Enum(
+alert_type_enum = postgresql.ENUM(
     "price_above",
     "price_below",
     "price_change_percent",
@@ -23,7 +24,7 @@ alert_type_enum = sa.Enum(
     name="alert_type",
     create_type=False,
 )
-alert_frequency_enum = sa.Enum(
+alert_frequency_enum = postgresql.ENUM(
     "instant",
     "hourly",
     "daily",
@@ -31,7 +32,7 @@ alert_frequency_enum = sa.Enum(
     name="alert_frequency",
     create_type=False,
 )
-alert_status_enum = sa.Enum(
+alert_status_enum = postgresql.ENUM(
     "active",
     "triggered",
     "expired",
@@ -116,6 +117,7 @@ def upgrade() -> None:
             existing_type=sa.String(length=50),
             type_=alert_type_enum,
             existing_nullable=False,
+            postgresql_using="alert_type::alert_type",
         )
         batch_op.drop_column("keyword")
 
