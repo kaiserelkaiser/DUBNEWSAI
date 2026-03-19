@@ -1,10 +1,28 @@
 "use client"
 
-import { Suspense, useMemo, useRef } from "react"
+import { Component, Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { Environment, Float, Html } from "@react-three/drei"
 import type { Group, Mesh } from "three"
 import * as THREE from "three"
+
+function supportsWebGL() {
+  if (typeof window === "undefined") {
+    return false
+  }
+
+  try {
+    const canvas = document.createElement("canvas")
+    const context =
+      canvas.getContext("webgl2", { powerPreference: "high-performance" }) ||
+      canvas.getContext("webgl", { powerPreference: "high-performance" }) ||
+      canvas.getContext("experimental-webgl")
+
+    return Boolean(context)
+  } catch {
+    return false
+  }
+}
 
 function SceneCore() {
   const groupRef = useRef<Group>(null)
@@ -95,22 +113,78 @@ function SceneCore() {
   )
 }
 
+function OrbitSceneFallback({ webglBlocked }: { webglBlocked: boolean }) {
+  return (
+    <div className="relative flex h-full w-full items-end overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%),linear-gradient(180deg,#091018_0%,#07080d_100%)] p-6 sm:p-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.18),transparent_18%),radial-gradient(circle_at_60%_60%,rgba(245,158,11,0.12),transparent_24%)]" />
+      <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:36px_36px]" />
+      <div className="absolute left-1/2 top-[46%] h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/20 bg-cyan-200/5 shadow-[0_0_120px_rgba(34,211,238,0.12)]" />
+      <div className="absolute left-1/2 top-[46%] h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-200/10" />
+      <div className="absolute left-1/2 top-[46%] h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/8" />
+      <div className="relative max-w-md">
+        <div className="rounded-full border border-white/10 bg-black/35 px-4 py-2 text-[10px] uppercase tracking-[0.38em] text-white/55 backdrop-blur-md">
+          {webglBlocked ? "Fallback visual" : "Loading scene"}
+        </div>
+        <h3 className="mt-5 font-editorial text-3xl font-semibold leading-tight text-white sm:text-4xl">
+          {webglBlocked ? "3D is unavailable in this browser session, but the experience stays intact." : "Preparing the interactive scene."}
+        </h3>
+        <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
+          {webglBlocked
+            ? "This environment has WebGL disabled or sandboxed, so DUBNEWSAI automatically falls back to a static premium visual instead of throwing renderer errors."
+            : "The premium fallback keeps the landing page stable while the scene capability is being detected."}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+class OrbitSceneBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <OrbitSceneFallback webglBlocked />
+    }
+
+    return this.props.children
+  }
+}
+
 export function LandingOrbitScene() {
+  const [webglReady, setWebglReady] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    setWebglReady(supportsWebGL())
+  }, [])
+
   return (
     <div className="relative aspect-[4/5] min-h-[420px] w-full overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%),linear-gradient(180deg,#091018_0%,#07080d_100%)]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.18),transparent_18%),radial-gradient(circle_at_60%_60%,rgba(245,158,11,0.12),transparent_24%)]" />
-      <Canvas camera={{ position: [0, 0, 5.8], fov: 38 }}>
-        <color attach="background" args={["#07080d"]} />
-        <fog attach="fog" args={["#07080d", 6, 10]} />
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[3, 5, 4]} intensity={1.3} color="#ffffff" />
-        <pointLight position={[-3, -1, 2]} intensity={1.4} color="#22d3ee" />
-        <pointLight position={[3, 1, 2]} intensity={1.1} color="#f59e0b" />
-        <Suspense fallback={null}>
-          <SceneCore />
-          <Environment preset="city" />
-        </Suspense>
-      </Canvas>
+      {webglReady ? (
+        <OrbitSceneBoundary>
+          <Canvas camera={{ position: [0, 0, 5.8], fov: 38 }} dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}>
+            <color attach="background" args={["#07080d"]} />
+            <fog attach="fog" args={["#07080d", 6, 10]} />
+            <ambientLight intensity={0.7} />
+            <directionalLight position={[3, 5, 4]} intensity={1.3} color="#ffffff" />
+            <pointLight position={[-3, -1, 2]} intensity={1.4} color="#22d3ee" />
+            <pointLight position={[3, 1, 2]} intensity={1.1} color="#f59e0b" />
+            <Suspense fallback={null}>
+              <SceneCore />
+              <Environment preset="city" />
+            </Suspense>
+          </Canvas>
+        </OrbitSceneBoundary>
+      ) : (
+        <OrbitSceneFallback webglBlocked={webglReady === false} />
+      )}
     </div>
   )
 }
