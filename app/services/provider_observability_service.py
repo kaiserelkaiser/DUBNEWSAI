@@ -16,7 +16,7 @@ class ProviderObservabilityService:
         result = await db.execute(select(DataProvider))
         existing = {provider.name: provider for provider in result.scalars().all()}
 
-        synced: dict[str, DataProvider] = {}
+        synced: dict[str, DataProvider] = dict(existing)
         for config in provider_registry.providers.values():
             provider = existing.get(config.name)
             if provider is None:
@@ -65,11 +65,12 @@ class ProviderObservabilityService:
         for provider_name, stats in provider_stats.items():
             provider = providers.get(provider_name)
             if provider is None:
+                provider = await db.scalar(select(DataProvider).where(DataProvider.name == provider_name))
+            if provider is None:
                 provider_type = ProviderType.NEWS.value if fetch_type == "news_aggregation" else ProviderType.MARKET.value
                 provider = DataProvider(name=provider_name, type=provider_type)
                 db.add(provider)
-                await db.flush()
-                providers[provider_name] = provider
+            providers[provider_name] = provider
 
             status = str(stats.get("status", "success"))
             count = int(stats.get("count", 0) or 0)

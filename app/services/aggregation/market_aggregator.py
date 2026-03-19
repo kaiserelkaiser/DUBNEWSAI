@@ -195,16 +195,29 @@ class MarketAggregator:
         return buckets
 
     @staticmethod
+    def _normalize_provider_name(provider_name: str) -> str:
+        normalized = provider_name.strip().lower().replace(":", "_").replace(" ", "_").replace("-", "_")
+        aliases = {
+            "fred_usa": "fred",
+            "world_bank": "world_bank",
+            "trading_economics": "trading_economics",
+            "alpha_vantage": "alpha_vantage",
+        }
+        return aliases.get(normalized, normalized)
+
+    @staticmethod
     def _build_provider_stats(results: dict[str, object]) -> dict[str, dict[str, object]]:
         provider_counts: dict[str, int] = {}
         for quote in results.get("quotes", []):
-            provider_counts[quote.provider] = provider_counts.get(quote.provider, 0) + 1
+            provider_key = MarketAggregator._normalize_provider_name(quote.provider)
+            provider_counts[provider_key] = provider_counts.get(provider_key, 0) + 1
 
         for rate in results.get("currencies", []):
-            provider_counts[rate.source] = provider_counts.get(rate.source, 0) + 1
+            provider_key = MarketAggregator._normalize_provider_name(rate.source)
+            provider_counts[provider_key] = provider_counts.get(provider_key, 0) + 1
 
         for indicator in results.get("economic_indicators", []):
-            provider_key = indicator.source.lower().replace(":", "_").replace(" ", "_")
+            provider_key = MarketAggregator._normalize_provider_name(indicator.source)
             provider_counts[provider_key] = provider_counts.get(provider_key, 0) + 1
 
         stats: dict[str, dict[str, object]] = {}
