@@ -11,19 +11,19 @@ export default function DashboardPage() {
     <AuthGuard>
       <div className="space-y-8">
         <HeroSection />
-        <QuickStats />
         <LiveTicker />
+        <QuickStats />
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div>
             <NewsFeed pageSize={8} />
           </div>
-
-          <div className="space-y-6">
-            <MarketOverview />
+          <div>
             <TrendingTopics />
           </div>
         </div>
+
+        <MarketOverview />
       </div>
     </AuthGuard>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, LogOut, Wifi, WifiOff } from "lucide-react"
+import { Bell, LogOut, Sparkles, Wifi, WifiOff } from "lucide-react"
 import Link from "next/link"
 
 import { MobileNav } from "@/components/layout/MobileNav"
@@ -13,45 +13,50 @@ export function Navbar() {
   const { isAuthenticated, logout, user } = useAuth()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-white/70 backdrop-blur-xl dark:bg-slate-950/80">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#050506]/80 backdrop-blur-2xl">
+      <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <MobileNav />
           <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-500 via-gold-400 to-cyber-500 text-sm font-black text-slate-950 shadow-gold">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white text-sm font-black text-slate-950 shadow-[0_12px_40px_-18px_rgba(255,255,255,0.6)]">
               DN
             </div>
-            <div className="hidden sm:block">
-              <div className="font-display text-xl font-bold text-gradient-gold">DUBNEWSAI</div>
-              <div className="text-xs uppercase tracking-[0.3em] text-slate-500">Market Intelligence</div>
+            <div>
+              <div className="font-display text-lg font-bold tracking-[0.14em] text-white">DUBNEWSAI</div>
+              <div className="text-[10px] uppercase tracking-[0.32em] text-white/42">Dubai market intelligence</div>
             </div>
           </Link>
+          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] uppercase tracking-[0.24em] text-white/52 xl:inline-flex">
+            <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
+            Multi-source signal engine
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300 md:flex">
+          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/72 md:flex">
             {isConnected ? (
               <Wifi className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
               <WifiOff className="h-3.5 w-3.5 text-red-400" />
             )}
-            <span>{isConnected ? "Live connected" : "Realtime offline"}</span>
+            <span>{isConnected ? "Realtime connected" : "Realtime offline"}</span>
           </div>
+
           {isAuthenticated ? (
             <>
               <Link
                 href="/settings"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/70 text-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/72 transition hover:border-cyan-300/30 hover:text-white"
               >
                 <Bell className="h-4 w-4" />
               </Link>
-              <div className="hidden rounded-full border border-white/10 bg-white/70 px-4 py-2 text-sm text-slate-700 dark:bg-slate-900/80 dark:text-slate-200 md:block">
+              <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/78 lg:block">
                 {user?.full_name || user?.email || "Operator"}
               </div>
               <button
                 type="button"
                 onClick={logout}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/70 text-slate-700 transition hover:border-gold-400 hover:text-gold-500 dark:bg-slate-900/80 dark:text-slate-200"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/72 transition hover:border-amber-300/30 hover:text-white"
                 aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
@@ -61,13 +66,13 @@ export function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden rounded-full border border-white/10 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyber-400 hover:text-cyber-500 dark:bg-slate-900/80 dark:text-slate-200 md:inline-flex"
+                className="hidden rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/72 transition hover:text-white md:inline-flex"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="inline-flex rounded-full bg-gradient-to-r from-gold-500 to-cyber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:opacity-90"
+                className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white/92"
               >
                 Get premium
               </Link>

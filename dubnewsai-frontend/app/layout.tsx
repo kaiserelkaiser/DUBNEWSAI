@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google"
+import { Inter, JetBrains_Mono, Merriweather, Space_Grotesk } from "next/font/google"
 import type { ReactNode } from "react"
 
 import "./globals.css"
@@ -24,6 +24,13 @@ const clashDisplay = Space_Grotesk({
   display: "swap"
 })
 
+const editorial = Merriweather({
+  subsets: ["latin"],
+  variable: "--font-editorial",
+  display: "swap",
+  weight: ["300", "400", "700"]
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "DUBNEWSAI - Dubai Real Estate Intelligence Platform",
@@ -39,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${clashDisplay.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${clashDisplay.variable} ${editorial.variable} font-sans antialiased`}
       >
         <Providers>
           {children}

@@ -1,7 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Activity, CloudSun, Landmark, TrendingDown, TrendingUp } from "lucide-react"
+import Link from "next/link"
+import { CloudSun, Landmark, TrendingDown, TrendingUp } from "lucide-react"
 
 import { useMarketOverview } from "@/lib/hooks/useMarketData"
 import { formatCompactCurrency, formatCompactNumber, titleCase } from "@/lib/utils/formatters"
@@ -11,11 +12,7 @@ function ChangeBadge({ value }: { value: number }) {
   const positive = value >= 0
 
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
-        positive ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
-      }`}
-    >
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${positive ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>
       {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
       {Math.abs(value).toFixed(2)}%
     </span>
@@ -25,7 +22,7 @@ function ChangeBadge({ value }: { value: number }) {
 function ProviderLabel({ provider, fallback }: { provider?: string | null; fallback?: boolean }) {
   if (fallback) {
     return (
-      <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
+      <span className="rounded-full border border-amber-300/15 bg-amber-300/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-amber-200/82">
         Watchlist fallback
       </span>
     )
@@ -36,13 +33,66 @@ function ProviderLabel({ provider, fallback }: { provider?: string | null; fallb
   }
 
   return (
-    <span className="rounded-full bg-cyber-500/10 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-cyber-600 dark:text-cyber-300">
+    <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-cyan-100/82">
       {titleCase(provider)}
     </span>
   )
 }
 
-function StockTable({
+function SummaryTile({ title, value, caption }: { title: string; value: string; caption: string }) {
+  return (
+    <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-4">
+      <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">{title}</div>
+      <div className="mt-3 text-2xl font-semibold text-white">{value}</div>
+      <div className="mt-2 text-sm text-white/46">{caption}</div>
+    </div>
+  )
+}
+
+function BoardRow({ stock }: { stock: MarketStock }) {
+  const fallback = stock.is_live_data === false
+
+  return (
+    <Link
+      href={`/market/${stock.symbol}`}
+      className="group grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06] lg:grid-cols-[1.3fr_0.9fr_0.7fr]"
+    >
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-base font-semibold text-white">{stock.symbol}</span>
+          <ProviderLabel provider={stock.primary_provider} fallback={fallback} />
+        </div>
+        <div className="mt-2 text-sm text-white/58">{stock.name}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-white/36">
+          {stock.exchange ? <span>{stock.exchange}</span> : null}
+          {stock.asset_class ? <span>{titleCase(stock.asset_class)}</span> : null}
+          {stock.region ? <span>{stock.region}</span> : null}
+        </div>
+      </div>
+
+      <div className="space-y-1 text-sm text-white/52">
+        {fallback ? (
+          <div className="text-sm font-medium uppercase tracking-[0.18em] text-amber-200/82">Awaiting live quote</div>
+        ) : (
+          <>
+            <div className="text-xl font-semibold text-white">{formatCompactCurrency(stock.price, stock.currency || "AED")}</div>
+            <div>{formatCompactNumber(stock.volume)} volume</div>
+            {stock.market_cap ? <div>{formatCompactNumber(stock.market_cap)} market cap</div> : null}
+          </>
+        )}
+      </div>
+
+      <div className="flex flex-col items-start gap-2 lg:items-end">
+        {!fallback ? <ChangeBadge value={stock.change_percent} /> : null}
+        {stock.data_quality_score !== undefined && stock.data_quality_score !== null ? (
+          <span className="text-xs text-white/40">Quality {stock.data_quality_score.toFixed(0)}%</span>
+        ) : null}
+      </div>
+    </Link>
+  )
+}
+
+function BoardCard({
   title,
   subtitle,
   stocks
@@ -52,275 +102,196 @@ function StockTable({
   stocks: MarketStock[]
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-slate-950/5 p-4 dark:bg-white/5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section className="panel-premium p-6">
+      <div className="mb-5 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <div className="text-[10px] uppercase tracking-[0.32em] text-white/42">{title}</div>
+          <p className="mt-2 text-sm text-white/56">{subtitle}</p>
         </div>
-        <div className="rounded-full bg-white/60 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
-          {stocks.length} symbols
-        </div>
+        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/66">{stocks.length} symbols</div>
       </div>
 
       <div className="space-y-3">
-        {stocks.map((stock) => {
-          const fallback = stock.is_live_data === false
-
-          return (
-            <div
-              key={stock.symbol}
-              className="grid gap-3 rounded-2xl border border-white/10 bg-white/60 p-4 dark:bg-slate-950/40 lg:grid-cols-[1.4fr_0.9fr_0.8fr]"
-            >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-base font-semibold text-slate-900 dark:text-white">{stock.symbol}</span>
-                  <ProviderLabel provider={stock.primary_provider} fallback={fallback} />
-                  {stock.region ? (
-                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      {stock.region}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="text-sm text-slate-600 dark:text-slate-300">{stock.name}</div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                  {stock.exchange ? <span>{stock.exchange.toUpperCase()}</span> : null}
-                  {stock.asset_class ? <span>{titleCase(stock.asset_class)}</span> : null}
-                  {stock.confidence_level ? <span>{titleCase(stock.confidence_level)} confidence</span> : null}
-                </div>
-              </div>
-
-              <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
-                {fallback ? (
-                  <div className="text-sm font-medium uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">
-                    Awaiting live quote
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-xl font-semibold text-slate-950 dark:text-white">{formatCompactCurrency(stock.price, stock.currency || "AED")}</div>
-                    <div>{formatCompactNumber(stock.volume)} volume</div>
-                    {stock.market_cap ? <div>{formatCompactNumber(stock.market_cap)} market cap</div> : null}
-                  </>
-                )}
-              </div>
-
-              <div className="flex flex-col items-start gap-2 lg:items-end">
-                {!fallback ? <ChangeBadge value={stock.change_percent} /> : null}
-                {stock.data_quality_score !== undefined && stock.data_quality_score !== null ? (
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    Quality {stock.data_quality_score.toFixed(0)}%
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          )
-        })}
+        {stocks.map((stock) => (
+          <BoardRow key={stock.symbol} stock={stock} />
+        ))}
       </div>
-    </div>
+    </section>
   )
 }
 
-function CompactMetricCard({
-  title,
-  children
-}: {
-  title: string
-  children: ReactNode
-}) {
+function StackPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-slate-950/5 p-4 dark:bg-white/5">
-      <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">{title}</p>
-      <div className="mt-4 space-y-3">{children}</div>
-    </div>
+    <section className="panel-premium p-5">
+      <div className="text-[10px] uppercase tracking-[0.32em] text-white/42">{title}</div>
+      <div className="mt-5 space-y-4">{children}</div>
+    </section>
   )
 }
 
 function CurrencyGrid({ currencies }: { currencies: CurrencyRate[] }) {
   return (
-    <CompactMetricCard title="FX and Currency">
+    <StackPanel title="FX and currency">
       <div className="grid gap-3 sm:grid-cols-2">
         {currencies.map((currency) => (
-          <div key={`${currency.from_currency}-${currency.to_currency}`} className="rounded-2xl border border-white/10 px-3 py-3">
-            <div className="text-sm font-semibold text-slate-900 dark:text-white">
-              {currency.from_currency}/{currency.to_currency}
-            </div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatCompactNumber(currency.rate)}</div>
+          <div key={`${currency.from_currency}-${currency.to_currency}`} className="rounded-[1.3rem] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <div className="text-sm font-semibold text-white">{currency.from_currency}/{currency.to_currency}</div>
+            <div className="mt-2 text-sm text-white/56">{formatCompactNumber(currency.rate)}</div>
           </div>
         ))}
       </div>
-    </CompactMetricCard>
+    </StackPanel>
   )
 }
 
 function IndicatorList({ indicators }: { indicators: EconomicIndicator[] }) {
   return (
-    <CompactMetricCard title="Macro and Economic Indicators">
+    <StackPanel title="Macro indicators">
       {indicators.map((indicator) => (
-        <div key={indicator.indicator_code} className="flex items-start justify-between gap-3">
+        <div key={indicator.indicator_code} className="flex items-start justify-between gap-3 rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-3">
           <div>
-            <div className="text-sm font-semibold text-slate-900 dark:text-white">{indicator.indicator_name}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {indicator.country} | {indicator.source || "Macro feed"}
-            </div>
+            <div className="text-sm font-semibold text-white">{indicator.indicator_name}</div>
+            <div className="mt-1 text-xs text-white/42">{indicator.country} | {indicator.source || "Macro feed"}</div>
           </div>
-          <div className="text-right text-sm font-medium text-slate-900 dark:text-white">
-            {formatCompactNumber(indicator.value)}
-          </div>
+          <div className="text-right text-sm font-medium text-white">{formatCompactNumber(indicator.value)}</div>
         </div>
       ))}
-    </CompactMetricCard>
+    </StackPanel>
   )
 }
 
 export function MarketOverview() {
-  const { data } = useMarketOverview()
+  const { data, isLoading } = useMarketOverview()
   const hasFallbackOnly = Boolean(data?.stocks.length) && Boolean(data?.stocks.every((stock) => stock.is_live_data === false))
 
-  return (
-    <section className="panel space-y-6 p-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Landmark className="h-4 w-4 text-cyber-500" />
-            <h3 className="text-lg font-display font-semibold text-slate-950 dark:text-white">Market Intelligence Overview</h3>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Multi-source UAE equities, global real estate, FX, commodities, macro signals, and Dubai market weather.
-          </p>
-        </div>
+  if (isLoading) {
+    return <div className="panel-premium h-96 animate-pulse bg-white/[0.03]" />
+  }
 
-        <div className="flex flex-wrap items-center gap-3">
-          {data?.market_status?.uae_markets ? (
-            <span className="rounded-full bg-white/60 px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
-              UAE {data.market_status.uae_markets}
-            </span>
-          ) : null}
-          {data?.market_status?.us_markets ? (
-            <span className="rounded-full bg-white/60 px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
-              US {data.market_status.us_markets}
-            </span>
-          ) : null}
-          {data?.weather ? (
-            <span className="inline-flex items-center gap-2 rounded-full bg-cyber-500/10 px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] text-cyber-600 dark:text-cyber-300">
-              <CloudSun className="h-3.5 w-3.5" />
-              Dubai {data.weather.temperature_c.toFixed(0)}C
-            </span>
-          ) : null}
+  return (
+    <section className="space-y-6">
+      <div className="panel-premium relative overflow-hidden p-6 sm:p-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.1),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.1),transparent_22%)]" />
+        <div className="relative">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/54">
+                <Landmark className="h-3.5 w-3.5 text-cyan-200" />
+                Market intelligence board
+              </div>
+              <h3 className="mt-4 text-balance text-3xl font-semibold text-white sm:text-4xl">
+                UAE boards, global real-estate context, macro pressure, FX, weather, and commodities in one view.
+              </h3>
+              <p className="mt-4 text-sm leading-7 text-white/56 sm:text-base">
+                The market page now behaves like a command surface: live boards on the left, context rails on the right, and clear provider visibility when upstream coverage drops.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {data?.market_status?.uae_markets ? (
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/72">
+                  UAE {data.market_status.uae_markets}
+                </span>
+              ) : null}
+              {data?.market_status?.us_markets ? (
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/72">
+                  US {data.market_status.us_markets}
+                </span>
+              ) : null}
+              {data?.weather ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-cyan-100/82">
+                  <CloudSun className="h-3.5 w-3.5" />
+                  Dubai {data.weather.temperature_c.toFixed(0)}C
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <SummaryTile title="Tracked boards" value={`${data?.stocks.length || 0}`} caption="UAE symbols in the active board" />
+            <SummaryTile title="Global context" value={`${data?.global_real_estate.length || 0}`} caption="Cross-market real-estate names" />
+            <SummaryTile title="FX coverage" value={`${data?.currencies.length || 0}`} caption="AED and major cross pairs" />
+            <SummaryTile title="Macro set" value={`${data?.economic_indicators.length || 0}`} caption="Economic indicators feeding context" />
+          </div>
         </div>
       </div>
 
       {hasFallbackOnly ? (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          UAE watchlist coverage is present, but several local symbols are still falling back to watchlist metadata until an upstream live provider returns a valid quote.
+        <div className="rounded-[1.6rem] border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-200/82">
+          Several local symbols are still in watchlist-fallback mode because an upstream provider is not returning a valid live quote.
         </div>
       ) : null}
 
-      <div className="grid gap-6 2xl:grid-cols-[1.8fr_1fr]">
+      <div className="grid gap-6 2xl:grid-cols-[1.7fr_1fr]">
         <div className="space-y-6">
-          <StockTable
-            title="UAE Market Board"
-            subtitle="DFM and ADX coverage for developers, banks, and core market names"
-            stocks={data?.stocks || []}
-          />
-
-          <StockTable
-            title="Global Real Estate"
-            subtitle="International REITs and homebuilder coverage for cross-market context"
-            stocks={data?.global_real_estate || []}
-          />
+          <BoardCard title="UAE market board" subtitle="DFM and ADX coverage for developers, banks, and high-signal names" stocks={data?.stocks || []} />
+          <BoardCard title="Global real-estate board" subtitle="REITs and homebuilders for international context" stocks={data?.global_real_estate || []} />
         </div>
 
         <div className="space-y-6">
           {data?.weather ? (
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-cyber-500/10 via-white/70 to-gold-500/10 p-4 dark:from-cyber-500/10 dark:via-slate-950/70 dark:to-gold-500/10">
+            <section className="panel-premium overflow-hidden p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Dubai Market Weather</p>
-                  <div className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">
-                    {data.weather.temperature_c.toFixed(1)}C
-                  </div>
-                  <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{data.weather.weather_summary}</div>
+                  <div className="text-[10px] uppercase tracking-[0.32em] text-white/42">Dubai market weather</div>
+                  <div className="mt-3 text-4xl font-semibold text-white">{data.weather.temperature_c.toFixed(1)}C</div>
+                  <div className="mt-2 text-sm text-white/56">{data.weather.weather_summary}</div>
                 </div>
-                <CloudSun className="h-8 w-8 text-gold-500" />
+                <CloudSun className="h-8 w-8 text-amber-200" />
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 px-3 py-3">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Feels Like</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                    {data.weather.apparent_temperature_c?.toFixed(1) ?? "--"}C
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 px-3 py-3">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Humidity</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                    {data.weather.humidity_percent ?? "--"}%
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 px-3 py-3">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Wind</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                    {data.weather.wind_speed_kph?.toFixed(1) ?? "--"} km/h
-                  </div>
-                </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <SummaryTile title="Feels like" value={`${data.weather.apparent_temperature_c?.toFixed(1) ?? "--"}C`} caption="Perceived temperature" />
+                <SummaryTile title="Humidity" value={`${data.weather.humidity_percent ?? "--"}%`} caption="Current moisture" />
+                <SummaryTile title="Wind" value={`${data.weather.wind_speed_kph?.toFixed(1) ?? "--"} km/h`} caption="Surface conditions" />
               </div>
-            </div>
+            </section>
           ) : null}
 
-          <CompactMetricCard title="Indices">
+          <StackPanel title="Indices">
             {(data?.indices || []).map((index) => (
-              <div key={index.symbol} className="flex items-start justify-between gap-3">
+              <div key={index.symbol} className="flex items-start justify-between gap-3 rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-3">
                 <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{index.symbol}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{index.name}</div>
+                  <div className="text-sm font-semibold text-white">{index.symbol}</div>
+                  <div className="mt-1 text-xs text-white/42">{index.name}</div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-sm font-medium text-slate-900 dark:text-white">{formatCompactCurrency(index.price, index.currency || "USD")}</div>
+                  <div className="text-sm font-medium text-white">{formatCompactCurrency(index.price, index.currency || "USD")}</div>
                   <ChangeBadge value={index.change_percent} />
                 </div>
               </div>
             ))}
-          </CompactMetricCard>
+          </StackPanel>
 
           <CurrencyGrid currencies={data?.currencies || []} />
           <IndicatorList indicators={data?.economic_indicators || []} />
 
-          <CompactMetricCard title="Commodities">
-            {(data?.commodities || []).map((commodity) => (
-              <div key={commodity.symbol} className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{commodity.name}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{commodity.symbol}</div>
+          <StackPanel title="Commodities">
+            {(data?.commodities || []).length ? (
+              (data?.commodities || []).map((commodity) => (
+                <div key={commodity.symbol} className="flex items-start justify-between gap-3 rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div>
+                    <div className="text-sm font-semibold text-white">{commodity.name}</div>
+                    <div className="mt-1 text-xs text-white/42">{commodity.symbol}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-sm font-medium text-white">{formatCompactCurrency(commodity.price, commodity.currency || "USD")}</div>
+                    <ChangeBadge value={commodity.change_percent} />
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-sm font-medium text-slate-900 dark:text-white">{formatCompactCurrency(commodity.price, commodity.currency || "USD")}</div>
-                  <ChangeBadge value={commodity.change_percent} />
-                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/56">
+                Commodity feeds are configured, but no current rows were returned by the active providers.
               </div>
-            ))}
-          </CompactMetricCard>
+            )}
+          </StackPanel>
 
-          <CompactMetricCard title="Coverage Snapshot">
+          <StackPanel title="Coverage snapshot">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 px-3 py-3">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  <Activity className="h-3.5 w-3.5" />
-                  Stored equities
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                  {(data?.stocks.length || 0) + (data?.global_real_estate.length || 0)}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/10 px-3 py-3">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  <CloudSun className="h-3.5 w-3.5" />
-                  Macro + FX
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                  {(data?.economic_indicators.length || 0) + (data?.currencies.length || 0)}
-                </div>
-              </div>
+              <SummaryTile title="Stored equities" value={`${(data?.stocks.length || 0) + (data?.global_real_estate.length || 0)}`} caption="Tracked across UAE and global boards" />
+              <SummaryTile title="Macro + FX" value={`${(data?.economic_indicators.length || 0) + (data?.currencies.length || 0)}`} caption="Context modules active" />
             </div>
-          </CompactMetricCard>
+          </StackPanel>
         </div>
       </div>
     </section>

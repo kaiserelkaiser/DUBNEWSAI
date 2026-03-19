@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
+import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
@@ -55,7 +56,7 @@ export default function ProvidersAdminPage() {
     try {
       const [providersResponse, summaryResponse] = await Promise.all([
         apiClient.get<ProviderRow[]>("/admin/providers/"),
-        apiClient.get<ProviderSummary>("/admin/providers/dashboard-summary"),
+        apiClient.get<ProviderSummary>("/admin/providers/dashboard-summary")
       ])
       setProviders(providersResponse.data)
       setSummary(summaryResponse.data)
@@ -92,7 +93,7 @@ export default function ProvidersAdminPage() {
   if (loading) {
     return (
       <AuthGuard>
-        <div className="panel p-8">
+        <div className="panel-deep p-8">
           <LoadingSpinner />
         </div>
       </AuthGuard>
@@ -102,12 +103,12 @@ export default function ProvidersAdminPage() {
   if (!isAdmin) {
     return (
       <AuthGuard>
-        <div className="panel flex items-start gap-4 p-6">
-          <ShieldAlert className="mt-1 h-6 w-6 text-red-400" />
+        <div className="panel-premium flex items-start gap-4 p-6">
+          <ShieldAlert className="mt-1 h-6 w-6 text-red-300" />
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-red-400">Restricted</p>
-            <h1 className="mt-2 text-2xl font-display font-semibold text-slate-950 dark:text-white">Admin access required</h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+            <p className="story-kicker">Restricted</p>
+            <h1 className="mt-3 text-2xl font-semibold text-white">Admin access required</h1>
+            <p className="mt-3 text-sm leading-7 text-white/56">
               This view exposes provider controls and operational health. It is available to admin accounts only.
             </p>
           </div>
@@ -118,19 +119,49 @@ export default function ProvidersAdminPage() {
 
   return (
     <AuthGuard>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyber-500">Admin</p>
-            <h1 className="text-3xl font-display font-semibold text-slate-950 dark:text-white">Provider Management</h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              Monitor provider health, rate-limit posture, and live ingestion reliability.
-            </p>
-          </div>
+      <div className="space-y-8">
+        <PremiumPageHero
+          eyebrow="Provider operations"
+          title="Operational health should feel like mission control, not a detached admin table."
+          description="Provider monitoring now sits inside the same design language as the rest of the product, so source health, circuit state, and failure patterns feel like part of the platform instead of a separate tool."
+          chips={["Live health", "Circuit control", "Source quality", "Operational insight"]}
+          stats={[
+            {
+              label: "Total providers",
+              value: `${summary?.total_providers ?? 0}`,
+              hint: "Configured across news, market, and macro layers"
+            },
+            {
+              label: "Healthy",
+              value: `${summary?.healthy ?? 0}`,
+              hint: "Currently delivering within acceptable behavior"
+            },
+            {
+              label: "Unhealthy",
+              value: `${summary?.unhealthy ?? 0}`,
+              hint: "Need attention or are being protected by circuit rules"
+            },
+            {
+              label: "Calls today",
+              value: `${summary?.total_calls_today ?? 0}`,
+              hint: "Platform fetch attempts in the current day window"
+            }
+          ]}
+          tone="rose"
+          actions={[
+            {
+              label: refreshing ? "Refreshing..." : "Refresh providers",
+              href: "#providers-table",
+              variant: "ghost"
+            }
+          ]}
+        />
+
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => void fetchData()}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-700 transition hover:border-gold-400 hover:text-gold-500 disabled:opacity-60 dark:text-slate-200"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-white/78 transition hover:text-white disabled:opacity-60"
             disabled={refreshing}
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
@@ -138,114 +169,81 @@ export default function ProvidersAdminPage() {
           </button>
         </div>
 
-        {summary && (
+        {summary ? (
           <section className="grid gap-4 md:grid-cols-4">
-            <article className="panel p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Total Providers</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{summary.total_providers}</div>
-            </article>
-            <article className="panel p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Healthy</div>
-                  <div className="mt-3 text-3xl font-semibold text-emerald-500">{summary.healthy}</div>
-                </div>
-                <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-              </div>
-            </article>
-            <article className="panel p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Unhealthy</div>
-                  <div className="mt-3 text-3xl font-semibold text-red-500">{summary.unhealthy}</div>
-                </div>
-                <AlertCircle className="h-8 w-8 text-red-400" />
-              </div>
-            </article>
-            <article className="panel p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Calls Today</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{summary.total_calls_today}</div>
-            </article>
+            <SummaryCard title="Total providers" value={`${summary.total_providers}`} />
+            <SummaryCard title="Healthy" value={`${summary.healthy}`} accent="text-emerald-300" icon={<CheckCircle2 className="h-7 w-7 text-emerald-300" />} />
+            <SummaryCard title="Unhealthy" value={`${summary.unhealthy}`} accent="text-red-300" icon={<AlertCircle className="h-7 w-7 text-red-300" />} />
+            <SummaryCard title="Calls today" value={`${summary.total_calls_today}`} />
           </section>
-        )}
+        ) : null}
 
-        {summary && (
+        {summary ? (
           <section className="grid gap-4 lg:grid-cols-3">
             {Object.entries(summary.by_type).map(([type, stats]) => (
-              <article key={type} className="panel p-5">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{titleCase(type)} Sources</div>
+              <article key={type} className="panel-premium p-5">
+                <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">{titleCase(type)} sources</div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <div className="text-slate-500">Total</div>
-                    <div className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">{stats.total}</div>
-                  </div>
-                  <div>
-                    <div className="text-slate-500">Enabled</div>
-                    <div className="mt-1 text-lg font-semibold text-emerald-500">{stats.enabled}</div>
-                  </div>
-                  <div>
-                    <div className="text-slate-500">Healthy</div>
-                    <div className="mt-1 text-lg font-semibold text-cyber-500">{stats.healthy}</div>
-                  </div>
+                  <Metric title="Total" value={`${stats.total}`} />
+                  <Metric title="Enabled" value={`${stats.enabled}`} accent="text-emerald-300" />
+                  <Metric title="Healthy" value={`${stats.healthy}`} accent="text-cyan-100" />
                 </div>
               </article>
             ))}
           </section>
-        )}
+        ) : null}
 
-        <section className="panel overflow-hidden">
+        <section id="providers-table" className="panel-premium overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white/10 text-sm">
-              <thead className="bg-slate-950/50 text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+              <thead className="bg-white/[0.03] text-left text-[10px] uppercase tracking-[0.28em] text-white/42">
                 <tr>
-                  <th className="px-4 py-3">Provider</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Circuit</th>
-                  <th className="px-4 py-3">Health</th>
-                  <th className="px-4 py-3">Success</th>
-                  <th className="px-4 py-3">Calls</th>
-                  <th className="px-4 py-3">Last Success</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="px-4 py-4">Provider</th>
+                  <th className="px-4 py-4">Type</th>
+                  <th className="px-4 py-4">Circuit</th>
+                  <th className="px-4 py-4">Health</th>
+                  <th className="px-4 py-4">Success</th>
+                  <th className="px-4 py-4">Calls</th>
+                  <th className="px-4 py-4">Last success</th>
+                  <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-white/6">
                 {providers.map((provider) => {
                   const liveHealth = Math.round(provider.live_health_score)
                   const circuitClass =
                     provider.live_circuit_state === "closed"
-                      ? "text-emerald-400"
+                      ? "text-emerald-300"
                       : provider.live_circuit_state === "half_open"
-                        ? "text-amber-400"
-                        : "text-red-400"
+                        ? "text-amber-200"
+                        : "text-red-300"
 
                   return (
-                    <tr key={provider.id} className="bg-transparent">
+                    <tr key={provider.id}>
                       <td className="px-4 py-4 align-top">
-                        <div className="font-semibold text-slate-950 dark:text-white">{provider.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">Priority {provider.priority}</div>
-                        {provider.base_url && <div className="mt-1 text-xs text-slate-500">{provider.base_url}</div>}
+                        <div className="font-semibold text-white">{provider.name}</div>
+                        <div className="mt-1 text-xs text-white/40">Priority {provider.priority}</div>
+                        {provider.base_url ? <div className="mt-1 text-xs text-white/32">{provider.base_url}</div> : null}
                       </td>
-                      <td className="px-4 py-4 align-top text-slate-600 dark:text-slate-300">{titleCase(provider.type)}</td>
-                      <td className={`px-4 py-4 align-top font-medium ${circuitClass}`}>
-                        {titleCase(provider.live_circuit_state.replace("_", " "))}
-                      </td>
+                      <td className="px-4 py-4 align-top text-white/64">{titleCase(provider.type)}</td>
+                      <td className={`px-4 py-4 align-top font-medium ${circuitClass}`}>{titleCase(provider.live_circuit_state.replace("_", " "))}</td>
                       <td className="px-4 py-4 align-top">
-                        <div className="w-32 rounded-full bg-slate-800/60">
+                        <div className="w-32 rounded-full bg-white/10">
                           <div
-                            className={`h-2 rounded-full ${liveHealth >= 70 ? "bg-emerald-500" : liveHealth >= 40 ? "bg-amber-500" : "bg-red-500"}`}
+                            className={`h-2 rounded-full ${liveHealth >= 70 ? "bg-emerald-400" : liveHealth >= 40 ? "bg-amber-300" : "bg-red-400"}`}
                             style={{ width: `${Math.max(0, Math.min(100, liveHealth))}%` }}
                           />
                         </div>
-                        <div className="mt-2 text-xs text-slate-500">{liveHealth}%</div>
+                        <div className="mt-2 text-xs text-white/40">{liveHealth}%</div>
                       </td>
-                      <td className="px-4 py-4 align-top text-slate-600 dark:text-slate-300">{provider.success_rate.toFixed(1)}%</td>
-                      <td className="px-4 py-4 align-top text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-4 align-top text-white/64">{provider.success_rate.toFixed(1)}%</td>
+                      <td className="px-4 py-4 align-top text-white/64">
                         <div>{provider.total_calls}</div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-white/40">
                           {provider.successful_calls} ok / {provider.failed_calls} fail
                         </div>
                       </td>
-                      <td className="px-4 py-4 align-top text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-4 align-top text-white/64">
                         {provider.last_success_at ? formatDateTime(provider.last_success_at) : "Never"}
                       </td>
                       <td className="px-4 py-4 align-top">
@@ -253,19 +251,19 @@ export default function ProvidersAdminPage() {
                           <button
                             type="button"
                             onClick={() => void toggleProvider(provider.id)}
-                            className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-slate-700 transition hover:border-gold-400 hover:text-gold-500 dark:text-slate-200"
+                            className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/78 transition hover:text-white"
                           >
                             {provider.is_enabled ? "Disable" : "Enable"}
                           </button>
-                          {provider.live_circuit_state === "open" && (
+                          {provider.live_circuit_state === "open" ? (
                             <button
                               type="button"
                               onClick={() => void resetCircuit(provider.id)}
-                              className="rounded-2xl border border-red-500/30 px-3 py-2 text-xs text-red-400 transition hover:border-red-400 hover:text-red-300"
+                              className="rounded-full border border-red-500/30 px-3 py-2 text-xs text-red-300 transition hover:border-red-400/50 hover:text-red-200"
                             >
                               Reset Circuit
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -277,5 +275,38 @@ export default function ProvidersAdminPage() {
         </section>
       </div>
     </AuthGuard>
+  )
+}
+
+function SummaryCard({
+  title,
+  value,
+  accent,
+  icon
+}: {
+  title: string
+  value: string
+  accent?: string
+  icon?: React.ReactNode
+}) {
+  return (
+    <article className="panel-premium p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">{title}</div>
+          <div className={`mt-4 text-3xl font-semibold ${accent || "text-white"}`}>{value}</div>
+        </div>
+        {icon}
+      </div>
+    </article>
+  )
+}
+
+function Metric({ title, value, accent }: { title: string; value: string; accent?: string }) {
+  return (
+    <div>
+      <div className="text-white/40">{title}</div>
+      <div className={`mt-2 text-lg font-semibold ${accent || "text-white"}`}>{value}</div>
+    </div>
   )
 }

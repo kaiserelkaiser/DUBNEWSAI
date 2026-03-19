@@ -76,6 +76,14 @@
   .panel {
     @apply rounded-2xl border border-white/10 bg-white/75 shadow-xl shadow-slate-950/5 backdrop-blur-xl dark:bg-slate-900/70;
   }
+
+  .panel-premium {
+    @apply rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-[0_32px_120px_-48px_rgba(0,0,0,0.85)] backdrop-blur-2xl;
+  }
+
+  .panel-deep {
+    @apply rounded-[2rem] border border-white/10 bg-[#0a0d12]/90 shadow-[0_30px_100px_-50px_rgba(0,0,0,0.95)] backdrop-blur-2xl;
+  }
 }
 
 @layer utilities {
@@ -111,4 +119,21 @@
       linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
     background-size: 28px 28px;
   }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .story-copy {
+    @apply font-editorial text-[1.08rem] leading-9 tracking-[0.01em] text-slate-700 dark:text-slate-200;
+  }
+
+  .story-kicker {
+    @apply text-[10px] uppercase tracking-[0.42em] text-white/40;
+  }
+
+  .reading-body {
+    @apply text-[1.03rem] leading-8 tracking-[0.01em] text-white/70 sm:text-[1.08rem] sm:leading-9;
+  }
 }
+

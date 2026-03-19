@@ -1,15 +1,39 @@
 import { NewsFeed } from "@/components/news/NewsFeed"
+import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 
 export default function NewsPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm uppercase tracking-[0.3em] text-cyber-500">News</p>
-        <h1 className="text-3xl font-display font-semibold text-slate-950 dark:text-white">Market News Feed</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-          Cross-provider Dubai, UAE, market, and property coverage with full article detail available on-platform.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PremiumPageHero
+        eyebrow="News command"
+        title="Every market signal deserves a front page, not a feed dump."
+        description="Cross-provider Dubai, UAE, market, and property coverage is now framed as an editorial surface with stronger reading hierarchy, source visibility, and full on-platform context before the user ever leaves DUBNEWSAI."
+        chips={["Full article detail", "Source provenance", "Cross-source matches", "Readable metadata"]}
+        stats={[
+          {
+            label: "Story behavior",
+            value: "Editorial front",
+            hint: "Lead story, secondary rails, and deeper browse flow"
+          },
+          {
+            label: "Reading mode",
+            value: "On-platform first",
+            hint: "Users understand the story before opening the source"
+          },
+          {
+            label: "Coverage depth",
+            value: "Dubai + UAE + market",
+            hint: "Built for property and capital-market context"
+          },
+          {
+            label: "Design tone",
+            value: "Luxe newsroom",
+            hint: "Sharper typography, motion, and deliberate spacing"
+          }
+        ]}
+        tone="cyan"
+      />
+
       <NewsFeed pageSize={18} showBrowseLink={false} />
     </div>
   )

@@ -109,6 +109,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         display: ["var(--font-clash)", "system-ui", "sans-serif"],
+        editorial: ["var(--font-editorial)", "Georgia", "serif"],
         mono: ["var(--font-jetbrains)", "monospace"]
       },
       boxShadow: {

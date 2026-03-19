@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { ArrowLeft, ArrowUpRight, Eye, Layers3, Link2, ScanSearch } from "lucide-react"
 
+import { ContainerScroll } from "@/components/ui/container-scroll-animation"
 import { SentimentBadge } from "@/components/news/SentimentBadge"
 import type { NewsArticle } from "@/types"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
@@ -33,6 +36,12 @@ async function getArticle(id: string): Promise<NewsArticle | null> {
   } catch {
     return null
   }
+}
+
+function estimateReadTime(article: NewsArticle) {
+  const text = article.content || article.description || article.title
+  const words = text.split(/\s+/).filter(Boolean).length
+  return Math.max(2, Math.ceil(words / 220))
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
@@ -73,10 +82,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!article) {
     notFound()
   }
-  const contentBlocks = (article.content || "")
+
+  const contentBlocks = (article.content || article.description || "")
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean)
+
+  const entityGroups = Object.entries(article.entities || {}).filter(([, values]) => values?.length)
+  const readTime = estimateReadTime(article)
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -101,101 +114,219 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <div className="min-h-screen bg-[#050506] text-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="container mx-auto max-w-4xl px-4 py-12">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <Link href="/news" className="text-sm font-medium text-cyber-500 transition hover:text-cyber-400">
-            Back to news
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-8 sm:px-6 lg:px-8">
+        <Link href="/news" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/78 transition hover:text-white">
+          <ArrowLeft className="h-4 w-4" />
+          Back to news
+        </Link>
+        {article.url ? (
+          <Link
+            href={article.url}
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/78 transition hover:text-white"
+          >
+            Original source
+            <ArrowUpRight className="h-4 w-4" />
           </Link>
-          <Link href="/" className="text-sm font-medium text-gold-500 transition hover:text-gold-400">
-            Open platform
-          </Link>
-        </div>
+        ) : null}
+      </div>
 
-        <article className="panel space-y-8 p-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-gold-500/10 px-3 py-1 text-xs font-medium text-gold-500">
-              {titleCase(article.category)}
-            </span>
-            <SentimentBadge sentiment={article.sentiment} score={article.sentiment_score} />
-            {article.primary_provider ? (
-              <span className="rounded-full bg-cyber-500/10 px-3 py-1 text-xs font-medium text-cyber-500">
-                {titleCase(article.primary_provider)}
-              </span>
-            ) : null}
-            <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-              {article.source_name || "DUBNEWSAI"}
-            </span>
-          </div>
-
-          <div>
-            <h1 className="text-4xl font-display font-semibold text-slate-950 dark:text-white">{article.title}</h1>
-            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-              Published {formatDateTime(article.published_at)} | {article.view_count} views
-            </p>
-          </div>
-
-          {article.description ? (
-            <p className="text-lg leading-8 text-slate-700 dark:text-slate-300">{article.description}</p>
-          ) : null}
-
-          <div className="grid gap-3 rounded-3xl border border-white/10 bg-slate-950/5 p-4 text-sm text-slate-600 dark:bg-white/5 dark:text-slate-300 md:grid-cols-3">
-            <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Quality</div>
-              <div className="mt-1 font-semibold text-slate-950 dark:text-white">
-                {article.quality_score !== undefined ? `${Math.round(article.quality_score)}%` : "N/A"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Source Coverage</div>
-              <div className="mt-1 font-semibold text-slate-950 dark:text-white">
-                {article.duplicate_count && article.duplicate_count > 1 ? `${article.duplicate_count} matching sources` : "Single-source match"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Enrichment</div>
-              <div className="mt-1 font-semibold text-slate-950 dark:text-white">
-                {article.enrichment_status ? titleCase(article.enrichment_status) : "Completed"}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-5 text-base leading-8 text-slate-700 dark:text-slate-300">
-            {contentBlocks.length ? (
-              contentBlocks.map((block, index) => (
-                <p key={`${article.id}-block-${index}`}>{block}</p>
-              ))
-            ) : (
-              <p>No long-form content is available for this article yet.</p>
-            )}
-          </div>
-
-          {article.keywords?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {article.keywords.map((keyword) => (
-                <span key={keyword} className="rounded-full bg-cyber-500/10 px-3 py-1 text-xs font-medium text-cyber-500">
-                  {keyword}
+      <ContainerScroll
+        titleComponent={
+          <div className="px-4 sm:px-0">
+            <div className="mx-auto max-w-4xl">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-white/62">
+                  {titleCase(article.category)}
                 </span>
-              ))}
+                <SentimentBadge sentiment={article.sentiment} score={article.sentiment_score} />
+                {article.primary_provider ? (
+                  <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-cyan-100/80">
+                    {titleCase(article.primary_provider)}
+                  </span>
+                ) : null}
+              </div>
+              <h1 className="mt-8 text-balance font-editorial text-5xl font-semibold leading-[0.98] text-white sm:text-6xl lg:text-7xl">
+                {article.title}
+              </h1>
+              <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-white/58 sm:text-lg">
+                {article.description || "A full on-platform article view with source context, enrichment metadata, and readable long-form formatting."}
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-[0.22em] text-white/42">
+                <span>{article.source_name || "DUBNEWSAI"}</span>
+                <span>{formatDateTime(article.published_at)}</span>
+                <span>{readTime} min read</span>
+                <span>{article.view_count} views</span>
+              </div>
             </div>
-          ) : null}
+          </div>
+        }
+      >
+        {article.image_url ? (
+          <Image
+            src={article.image_url}
+            alt={article.title}
+            height={1200}
+            width={1600}
+            className="mx-auto h-full w-full rounded-2xl object-cover object-center"
+            priority
+          />
+        ) : (
+          <div className="relative flex h-full w-full items-end overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.24),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.2),transparent_22%),linear-gradient(135deg,#090d14,#06080c)] p-8 md:p-10">
+            <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:32px_32px]" />
+            <div className="relative max-w-2xl">
+              <div className="story-kicker">On-platform brief</div>
+              <h2 className="mt-4 text-3xl font-semibold leading-tight text-white md:text-4xl">
+                Read the story here first, then decide if you need the original publisher.
+              </h2>
+              <p className="mt-4 text-base leading-8 text-white/62">
+                {article.description || article.content || "This article is available in DUBNEWSAI with full metadata, source provenance, and enrichment context."}
+              </p>
+            </div>
+          </div>
+        )}
+      </ContainerScroll>
 
-          {article.url ? (
-            <Link
-              href={article.url}
-              target="_blank"
-              className="inline-flex rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-gold-400 hover:text-gold-500 dark:text-slate-200"
-            >
-              Open original source
-            </Link>
-          ) : null}
-        </article>
+      <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <article className="panel-deep p-8 lg:p-10">
+            {article.description ? (
+              <div className="rounded-[1.8rem] border border-white/10 bg-white/[0.04] p-6">
+                <div className="story-kicker">Executive take</div>
+                <p className="mt-4 font-editorial text-[1.3rem] leading-9 text-white/86">{article.description}</p>
+              </div>
+            ) : null}
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <StoryFact label="Source" value={article.source_name || "DUBNEWSAI"} />
+              <StoryFact label="Coverage" value={article.duplicate_count && article.duplicate_count > 1 ? `${article.duplicate_count} sources` : "Single source"} />
+              <StoryFact label="Read time" value={`${readTime} min`} />
+            </div>
+
+            <div className="mt-8 space-y-6">
+              {contentBlocks.length ? (
+                contentBlocks.map((block, index) => (
+                  <p key={`${article.id}-block-${index}`} className="reading-body">
+                    {block}
+                  </p>
+                ))
+              ) : (
+                <p className="reading-body">
+                  No long-form content is available for this article yet.
+                </p>
+              )}
+            </div>
+
+            {article.keywords?.length ? (
+              <div className="mt-10">
+                <div className="story-kicker">Keywords</div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {article.keywords.map((keyword) => (
+                    <span key={keyword} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/68">
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {entityGroups.length ? (
+              <div className="mt-10 grid gap-4 md:grid-cols-2">
+                {entityGroups.map(([group, values]) => (
+                  <div key={group} className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-5">
+                    <div className="story-kicker">{titleCase(group)}</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {values.map((value) => (
+                        <span key={`${group}-${value}`} className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/72">
+                          {value}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </article>
+
+          <aside className="space-y-4 xl:sticky xl:top-28 xl:self-start">
+            <div className="panel-deep p-5">
+              <div className="story-kicker">Story signal</div>
+              <div className="mt-5 space-y-4 text-sm text-white/72">
+                <InfoRow label="Source" value={article.source_name || "DUBNEWSAI"} />
+                <InfoRow label="Author" value={article.author || "Not provided"} />
+                <InfoRow label="Published" value={formatDateTime(article.published_at)} />
+                <InfoRow label="Views" value={`${article.view_count}`} />
+                <InfoRow label="Read time" value={`${readTime} min`} />
+              </div>
+            </div>
+
+            <div className="panel-deep p-5">
+              <div className="story-kicker">Enrichment</div>
+              <div className="mt-5 space-y-4 text-sm text-white/72">
+                <InfoRow label="Quality" value={article.quality_score !== undefined ? `${Math.round(article.quality_score)}%` : "N/A"} />
+                <InfoRow label="Relevance" value={article.relevance_score !== undefined ? `${Math.round(article.relevance_score)}%` : "N/A"} />
+                <InfoRow label="Coverage" value={article.duplicate_count && article.duplicate_count > 1 ? `${article.duplicate_count} sources` : "Single source"} />
+                <InfoRow label="Status" value={article.enrichment_status ? titleCase(article.enrichment_status) : "Completed"} />
+              </div>
+            </div>
+
+            <div className="panel-deep p-5">
+              <div className="story-kicker">Why this page exists</div>
+              <p className="mt-4 text-sm leading-7 text-white/58">
+                The user should understand the story, the source strength, and the reason it matters before leaving DUBNEWSAI.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-white/68">
+                  <ScanSearch className="h-3.5 w-3.5 text-cyan-200" />
+                  Source context
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-white/68">
+                  <Layers3 className="h-3.5 w-3.5 text-amber-200" />
+                  Match coverage
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-white/68">
+                  <Eye className="h-3.5 w-3.5 text-emerald-200" />
+                  Readable on-platform
+                </div>
+              </div>
+              {article.url ? (
+                <Link
+                  href={article.url}
+                  target="_blank"
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white/92"
+                >
+                  Open original source
+                  <Link2 className="h-4 w-4" />
+                </Link>
+              ) : null}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   )
 }
+
+function StoryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+      <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">{label}</div>
+      <div className="mt-3 text-sm font-medium text-white/84">{value}</div>
+    </div>
+  )
+}
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-white/8 pb-3 last:border-b-0 last:pb-0">
+      <span className="text-[10px] uppercase tracking-[0.28em] text-white/38">{label}</span>
+      <span className="max-w-[60%] text-right text-sm text-white/82">{value}</span>
+    </div>
+  )
+}
+
+
+
+

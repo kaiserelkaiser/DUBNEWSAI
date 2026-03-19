@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { Activity, ArrowUpRight, Building2, Newspaper } from "lucide-react"
 
 import { useMarketData } from "@/lib/hooks/useMarketData"
@@ -8,21 +9,24 @@ import { formatCompactNumber } from "@/lib/utils/formatters"
 
 const cards = [
   {
-    label: "Tracked Stocks",
-    accent: "from-cyber-500/20 to-cyber-500/5",
-    icon: Activity
+    label: "Tracked stocks",
+    accent: "from-cyan-300/18 to-transparent",
+    icon: Activity,
+    caption: "Boards actively watched"
   },
   {
-    label: "News Volume",
-    accent: "from-gold-500/20 to-gold-500/5",
-    icon: Newspaper
+    label: "News volume",
+    accent: "from-amber-300/18 to-transparent",
+    icon: Newspaper,
+    caption: "Indexed multi-source stories"
   },
   {
-    label: "Developers Watched",
-    accent: "from-emerald-500/20 to-emerald-500/5",
-    icon: Building2
+    label: "Developers watched",
+    accent: "from-emerald-300/18 to-transparent",
+    icon: Building2,
+    caption: "Core companies in rotation"
   }
-]
+] as const
 
 export function QuickStats() {
   const { data: stocks } = useMarketData(20)
@@ -39,26 +43,38 @@ export function QuickStats() {
       {cards.map((card, index) => {
         const Icon = card.icon
         return (
-          <div
+          <motion.article
             key={card.label}
-            className={`panel overflow-hidden bg-gradient-to-br ${card.accent} p-5`}
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, delay: index * 0.06 }}
+            whileHover={{ y: -8 }}
+            className="panel-premium relative overflow-hidden p-5"
           >
-            <div className="mb-6 flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{card.label}</p>
-                <p className="mt-2 text-3xl font-display font-semibold text-slate-950 dark:text-white">
-                  {formatCompactNumber(values[index])}
-                </p>
+            <div className={`absolute inset-0 bg-gradient-to-br ${card.accent}`} />
+            <div className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100" />
+            <div className="relative">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">{card.label}</p>
+                  <p className="mt-4 text-4xl font-semibold text-white">{formatCompactNumber(values[index])}</p>
+                  <p className="mt-2 text-sm text-white/46">{card.caption}</p>
+                </div>
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 6 + index, repeat: Infinity, ease: "easeInOut" }}
+                  className="rounded-full border border-white/10 bg-white/[0.04] p-3 text-white"
+                >
+                  <Icon className="h-4 w-4" />
+                </motion.div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950 p-3 text-white">
-                <Icon className="h-4 w-4" />
+              <div className="mt-8 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-emerald-200/82">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                Streaming in real time
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>Streaming in real time</span>
-            </div>
-          </div>
+          </motion.article>
         )
       })}
     </section>

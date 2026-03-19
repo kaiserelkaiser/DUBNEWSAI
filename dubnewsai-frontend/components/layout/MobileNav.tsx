@@ -19,52 +19,58 @@ export function MobileNav() {
     <div className="lg:hidden">
       <button
         onClick={() => setIsOpen((value) => !value)}
-        className="rounded-full border border-white/10 bg-white/70 p-2 text-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+        className="rounded-full border border-white/10 bg-white/[0.05] p-2.5 text-white/78"
       >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       <AnimatePresence>
-        {isOpen && (
+        {isOpen ? (
           <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl"
           >
-            <div className="container mx-auto p-6">
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 240 }}
+              className="ml-auto flex h-full w-[86vw] max-w-sm flex-col border-l border-white/10 bg-[#07090d] p-6"
+            >
               <div className="mb-10 flex items-center justify-between">
-                <h2 className="text-2xl font-display font-bold text-gradient-gold">DUBNEWSAI</h2>
-                <button onClick={() => setIsOpen(false)} className="text-slate-300">
-                  <X className="h-6 w-6" />
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-white">DUBNEWSAI</h2>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.32em] text-white/42">Navigation</p>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="rounded-full border border-white/10 p-2 text-white/70">
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
               <nav className="space-y-3">
                 {routes.map((route) => (
-                  <MobileNavLink
-                    key={route.href}
-                    href={route.href}
-                    onClick={() => setIsOpen(false)}
-                  >
+                  <MobileNavLink key={route.href} href={route.href} onClick={() => setIsOpen(false)}>
                     {route.label}
                   </MobileNavLink>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false)
-                    logout()
-                  }}
-                  className="flex w-full items-center gap-2 rounded-2xl border border-red-500/30 px-4 py-4 text-left text-lg font-medium text-red-400 transition hover:border-red-400/50 hover:text-red-300"
-                >
-                  <LogOut className="h-5 w-5" />
-                  Sign out
-                </button>
               </nav>
-            </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  logout()
+                }}
+                className="mt-auto flex w-full items-center gap-2 rounded-[1.4rem] border border-red-500/25 px-4 py-4 text-left text-base font-medium text-red-300 transition hover:border-red-400/40 hover:text-red-200"
+              >
+                <LogOut className="h-5 w-5" />
+                Sign out
+              </button>
+            </motion.div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   )
@@ -86,10 +92,10 @@ function MobileNavLink({
       href={href}
       onClick={onClick}
       className={cn(
-        "block rounded-2xl border px-4 py-4 text-lg font-medium transition-colors",
+        "block rounded-[1.4rem] border px-4 py-4 text-base font-medium transition-colors",
         pathname === href
-          ? "border-gold-400/40 bg-gold-500/10 text-gold-300"
-          : "border-white/10 text-slate-300 hover:border-cyber-400/30 hover:text-cyber-300"
+          ? "border-white bg-white text-slate-950"
+          : "border-white/10 bg-white/[0.03] text-white/74 hover:text-white"
       )}
     >
       {children}

@@ -1,81 +1,101 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { TrendingDown, TrendingUp } from "lucide-react"
+import { Activity, ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react"
+import Link from "next/link"
 
 import { useMarketData } from "@/lib/hooks/useMarketData"
 import { formatCompactCurrency } from "@/lib/utils/formatters"
 
 export function LiveTicker() {
-  const { data: stocks, isLoading } = useMarketData()
+  const { data: stocks, isLoading } = useMarketData(12)
 
   if (isLoading) {
     return <TickerSkeleton />
   }
 
+  const items = stocks?.length ? stocks : []
+  const marqueeItems = [...items, ...items]
+
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 dark:bg-slate-950">
-      <div className="mb-2 flex items-center gap-2">
-        <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-        <span className="text-xs font-medium uppercase tracking-[0.25em] text-slate-400">Live Market Data</span>
+    <section className="panel-deep overflow-hidden p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/54">
+            <Activity className="h-3.5 w-3.5 text-emerald-300" />
+            Market pulse ribbon
+          </div>
+          <p className="mt-3 text-sm text-white/58">Live movers, price context, and feed health in a single continuously moving band.</p>
+        </div>
+        <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/72">
+          {items.length} symbols in rotation
+        </div>
       </div>
-      <div className="relative overflow-hidden">
+
+      <div className="relative mt-5 overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_12%,white_88%,transparent)]">
         <motion.div
-          className="flex gap-6"
-          animate={{ x: [0, -1000] }}
+          className="flex w-max gap-4"
+          animate={{ x: ["0%", "-50%"] }}
           transition={{
             x: {
               repeat: Infinity,
               repeatType: "loop",
-              duration: 20,
+              duration: 28,
               ease: "linear"
             }
           }}
         >
-          {stocks?.map((stock) => (
-            <TickerItem key={stock.symbol} stock={stock} />
-          ))}
-          {stocks?.map((stock) => (
-            <TickerItem key={`${stock.symbol}-dup`} stock={stock} />
+          {marqueeItems.map((stock, index) => (
+            <TickerItem key={`${stock.symbol}-${index}`} stock={stock} />
           ))}
         </motion.div>
       </div>
-    </div>
+    </section>
   )
 }
 
 function TickerItem({
   stock
 }: {
-  stock: { symbol: string; price: number; change: number; change_percent: number; currency?: string; is_live_data?: boolean }
+  stock: { symbol: string; name?: string; price: number; change: number; change_percent: number; currency?: string; is_live_data?: boolean }
 }) {
-  if (stock.is_live_data === false) {
-    return (
-      <div className="flex shrink-0 items-center gap-3">
-        <span className="text-sm font-bold text-white">{stock.symbol}</span>
-        <span className="text-xs uppercase tracking-[0.2em] text-amber-300">Awaiting feed</span>
-      </div>
-    )
-  }
-
   const isPositive = stock.change >= 0
 
   return (
-    <div className="flex shrink-0 items-center gap-3">
-      <span className="text-sm font-bold text-white">{stock.symbol}</span>
-      <span className="text-sm text-slate-400">{formatCompactCurrency(stock.price, stock.currency || "AED")}</span>
-      <div className={`flex items-center gap-1 text-xs font-medium ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
-        {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-        {Math.abs(stock.change_percent).toFixed(2)}%
+    <Link
+      href={`/market/${stock.symbol}`}
+      className="group flex min-w-[17rem] items-center justify-between rounded-[1.6rem] border border-white/10 bg-white/[0.04] px-4 py-4 transition hover:bg-white/[0.07]"
+    >
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">{stock.name || "Market signal"}</div>
+        <div className="mt-2 text-lg font-semibold text-white">{stock.symbol}</div>
       </div>
-    </div>
+
+      {stock.is_live_data === false ? (
+        <div className="text-right">
+          <div className="text-sm font-medium uppercase tracking-[0.18em] text-amber-200/82">Awaiting feed</div>
+          <div className="mt-2 inline-flex items-center gap-1 text-xs text-white/42">
+            Watchlist
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </div>
+        </div>
+      ) : (
+        <div className="text-right">
+          <div className="text-lg font-semibold text-white">{formatCompactCurrency(stock.price, stock.currency || "AED")}</div>
+          <div className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${isPositive ? "text-emerald-300" : "text-red-300"}`}>
+            {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+            {Math.abs(stock.change_percent).toFixed(2)}%
+          </div>
+        </div>
+      )}
+    </Link>
   )
 }
 
 function TickerSkeleton() {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 animate-pulse">
-      <div className="h-16 rounded-xl bg-slate-800" />
+    <div className="panel-deep animate-pulse p-5">
+      <div className="h-24 rounded-[1.5rem] bg-white/5" />
     </div>
   )
 }

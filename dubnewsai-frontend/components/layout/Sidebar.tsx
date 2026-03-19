@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, BellRing, Building2, LayoutDashboard, LineChart, Newspaper, Settings, Shield } from "lucide-react"
+import { BarChart3, BellRing, Building2, LayoutDashboard, LineChart, Newspaper, Settings, Shield, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -24,19 +24,19 @@ export function Sidebar() {
     : baseItems
 
   return (
-    <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-64 border-r border-white/10 bg-transparent lg:block">
-      <div className="m-4 rounded-3xl border border-white/10 bg-slate-950/70 p-4 shadow-2xl shadow-slate-950/25 backdrop-blur-xl">
-        <div className="mb-6 rounded-2xl border border-gold-400/20 bg-gradient-to-br from-gold-500/10 to-cyber-500/10 p-4">
-          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-gold-300">
-            <Building2 className="h-4 w-4" />
-            Dubai Intelligence
+    <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-[18.5rem] lg:block">
+      <div className="m-4 flex h-[calc(100%-2rem)] flex-col rounded-[2rem] border border-white/10 bg-[#080a0e]/88 p-4 shadow-[0_32px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-2xl">
+        <div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+            <Building2 className="h-4 w-4 text-amber-300" />
+            Dubai Intelligence Desk
           </div>
-          <p className="text-sm text-slate-300">
-            Monitor news, pricing momentum, and AI signals across the market.
+          <p className="mt-2 text-sm leading-6 text-white/58">
+            Editorial news, market structure, and live signal coverage in one operator workspace.
           </p>
         </div>
 
-        <nav className="space-y-1">
+        <nav className="mt-5 space-y-1.5">
           {items.map((item) => {
             const Icon = item.icon
             const active = pathname === item.href
@@ -46,18 +46,42 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all",
+                  "group flex items-center gap-3 rounded-[1.2rem] px-4 py-3 text-sm font-medium transition-all duration-300",
                   active
-                    ? "bg-gradient-to-r from-gold-500/20 to-cyber-500/15 text-white shadow-lg shadow-gold-500/10"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                    ? "bg-white text-slate-950 shadow-[0_18px_40px_-24px_rgba(255,255,255,0.85)]"
+                    : "text-white/62 hover:bg-white/[0.05] hover:text-white"
                 )}
               >
-                <Icon className={cn("h-4 w-4", active ? "text-gold-300" : "text-slate-500")} />
-                {item.label}
+                <span
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full border transition-all",
+                    active ? "border-slate-200 bg-slate-100" : "border-white/10 bg-white/[0.03]"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", active ? "text-slate-950" : "text-white/60 group-hover:text-white")} />
+                </span>
+                <span className="flex-1">{item.label}</span>
               </Link>
             )
           })}
         </nav>
+
+        <div className="mt-auto rounded-[1.6rem] border border-cyan-300/12 bg-cyan-300/[0.04] p-4">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.28em] text-cyan-100/60">
+            <Sparkles className="h-3.5 w-3.5" />
+            Live stack
+          </div>
+          <div className="mt-4 space-y-3 text-sm text-white/72">
+            <div className="flex items-center justify-between">
+              <span>News coverage</span>
+              <span className="rounded-full border border-white/10 px-2 py-1 text-[11px] uppercase tracking-[0.18em] text-white/58">active</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Market signals</span>
+              <span className="rounded-full border border-white/10 px-2 py-1 text-[11px] uppercase tracking-[0.18em] text-white/58">streaming</span>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   )
