@@ -1,0 +1,88 @@
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.rate_limit import check_tiered_rate_limit
+from app.database import get_db
+from app.dependencies import get_current_user_optional
+from app.models.market_data import MarketType
+from app.models.user import User
+from app.schemas.market_data import MarketDataResponse, MarketOverview
+from app.services.market_service import MarketService
+
+router = APIRouter(prefix="/market", tags=["market"])
+
+
+@router.get("/overview", response_model=MarketOverview)
+async def get_market_overview(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    _rate_limit: None = Depends(check_tiered_rate_limit),
+) -> MarketOverview:
+    """Get full market overview.
+
+    **Public Access:** Yes
+    """
+    del request, current_user
+    stocks = await MarketService.get_latest_market_data(db, MarketType.STOCK, limit=20)
+    indices = await MarketService.get_latest_market_data(db, MarketType.INDEX, limit=10)
+    real_estate = await MarketService.get_real_estate_companies(db)
+    currencies = await MarketService.get_latest_currency_rates(db, limit=10)
+    return MarketOverview(
+        stocks=[MarketDataResponse.model_validate(item) for item in stocks],
+        indices=[MarketDataResponse.model_validate(item) for item in indices],
+        currencies=currencies,
+        real_estate_companies=[MarketDataResponse.model_validate(item) for item in real_estate],
+    )
+
+
+@router.get("/stocks", response_model=list[MarketDataResponse])
+async def get_stocks(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    _rate_limit: None = Depends(check_tiered_rate_limit),
+) -> list[MarketDataResponse]:
+    """Get latest stock data.
+
+    **Public Access:** Yes
+    """
+    del request, current_user
+    data = await MarketService.get_latest_market_data(db, MarketType.STOCK, limit=limit)
+    return [MarketDataResponse.model_validate(item) for item in data]
+
+
+@router.get("/real-estate-companies", response_model=list[MarketDataResponse])
+async def get_real_estate_companies(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    _rate_limit: None = Depends(check_tiered_rate_limit),
+) -> list[MarketDataResponse]:
+    """Get real-estate company market data.
+
+    **Public Access:** Yes
+    """
+    del request, current_user
+    data = await MarketService.get_real_estate_companies(db)
+    return [MarketDataResponse.model_validate(item) for item in data]
+
+
+@router.get("/symbol/{symbol}", response_model=MarketDataResponse)
+async def get_symbol_data(
+    request: Request,
+    symbol: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    _rate_limit: None = Depends(check_tiered_rate_limit),
+) -> MarketDataResponse:
+    """Get data for a single symbol.
+
+    **Public Access:** Yes
+    """
+    del request, current_user
+    data = await MarketService.get_latest_symbol_data(db, symbol)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    return MarketDataResponse.model_validate(data)

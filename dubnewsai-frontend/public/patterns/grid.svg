@@ -1,0 +1,13 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0H180V180" stroke="white" stroke-opacity="0.3"/>
+  <path d="M0 30H180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M0 60H180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M0 90H180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M0 120H180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M0 150H180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M30 0V180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M60 0V180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M90 0V180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M120 0V180" stroke="white" stroke-opacity="0.12"/>
+  <path d="M150 0V180" stroke="white" stroke-opacity="0.12"/>
+</svg>
