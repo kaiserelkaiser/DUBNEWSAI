@@ -268,12 +268,17 @@ class MarketService:
         query = query.order_by(desc(MarketData.data_timestamp)).limit(limit)
         result = await db.execute(query)
         rows = list(result.scalars().all())
-        if not rows:
-            fallback_rows = await MarketService._get_watchlist_fallback(db, market_type=market_type, limit=limit)
-            if fallback_rows:
-                await cache.set(cache_key, fallback_rows, ttl=60)
-                return fallback_rows
         serialized = [MarketDataResponse.model_validate(row).model_dump(mode="json") for row in rows]
+        if len(serialized) < limit:
+            fallback_rows = await MarketService._get_watchlist_fallback(db, market_type=market_type, limit=limit)
+            existing_symbols = {item["symbol"] for item in serialized}
+            for fallback in fallback_rows:
+                if fallback["symbol"] in existing_symbols:
+                    continue
+                serialized.append(fallback)
+                existing_symbols.add(fallback["symbol"])
+                if len(serialized) >= limit:
+                    break
         await cache.set(cache_key, serialized, ttl=60)
         return serialized
 
@@ -312,19 +317,22 @@ class MarketService:
         ).order_by(MarketData.symbol.asc())
         result = await db.execute(query)
         companies = list(result.scalars().all())
-        if not companies:
+        serialized = [MarketDataResponse.model_validate(company).model_dump(mode="json") for company in companies]
+        if len(serialized) < len(symbols):
             fallback_companies = await MarketService._get_watchlist_fallback(
                 db,
                 market_type=MarketType.STOCK,
                 real_estate_only=True,
+                limit=len(symbols),
             )
-            await cache.cache_market_real_estate(fallback_companies, ttl=120)
-            return [MarketDataResponse.model_validate(company) for company in fallback_companies]
-        await cache.cache_market_real_estate(
-            [MarketDataResponse.model_validate(company).model_dump(mode="json") for company in companies],
-            ttl=120,
-        )
-        return companies
+            existing_symbols = {item["symbol"] for item in serialized}
+            for fallback in fallback_companies:
+                if fallback["symbol"] in existing_symbols:
+                    continue
+                serialized.append(fallback)
+                existing_symbols.add(fallback["symbol"])
+        await cache.cache_market_real_estate(serialized, ttl=120)
+        return [MarketDataResponse.model_validate(company) for company in serialized]
 
     @staticmethod
     async def get_latest_currency_rates(db: AsyncSession, limit: int = 10) -> list[CurrencyRate]:
@@ -351,7 +359,18 @@ class MarketService:
             .limit(limit)
         )
         result = await db.execute(query)
-        return list(result.scalars().all())
+        rows = list(result.scalars().all())
+        deduped: list[CurrencyRate] = []
+        seen_pairs: set[tuple[str, str]] = set()
+        for row in rows:
+            pair = (row.from_currency, row.to_currency)
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            deduped.append(row)
+            if len(deduped) >= limit:
+                break
+        return deduped
 
     @staticmethod
     async def get_latest_economic_indicators(db: AsyncSession, limit: int = 12) -> list[EconomicIndicator]:
