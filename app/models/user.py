@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, Enum as SqlEnum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, enum_kwargs
 
 if TYPE_CHECKING:
     from app.models.alert import Alert, Automation
@@ -30,7 +30,7 @@ class User(BaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     role: Mapped[UserRole] = mapped_column(
-        SqlEnum(UserRole, name="user_role"),
+        SqlEnum(UserRole, name="user_role", **enum_kwargs(UserRole)),
         default=UserRole.USER,
         nullable=False,
     )

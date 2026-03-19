@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, enum_kwargs
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -43,9 +43,13 @@ class Alert(BaseModel):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    alert_type: Mapped[AlertType] = mapped_column(SqlEnum(AlertType, name="alert_type"), nullable=False, index=True)
+    alert_type: Mapped[AlertType] = mapped_column(
+        SqlEnum(AlertType, name="alert_type", **enum_kwargs(AlertType)),
+        nullable=False,
+        index=True,
+    )
     status: Mapped[AlertStatus] = mapped_column(
-        SqlEnum(AlertStatus, name="alert_status"),
+        SqlEnum(AlertStatus, name="alert_status", **enum_kwargs(AlertStatus)),
         default=AlertStatus.ACTIVE,
         nullable=False,
         index=True,
@@ -56,7 +60,7 @@ class Alert(BaseModel):
     category: Mapped[str | None] = mapped_column(String(50), nullable=True)
     conditions: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     frequency: Mapped[AlertFrequency] = mapped_column(
-        SqlEnum(AlertFrequency, name="alert_frequency"),
+        SqlEnum(AlertFrequency, name="alert_frequency", **enum_kwargs(AlertFrequency)),
         default=AlertFrequency.INSTANT,
         nullable=False,
     )

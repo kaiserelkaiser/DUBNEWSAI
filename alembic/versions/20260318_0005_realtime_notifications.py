@@ -2,6 +2,7 @@
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -11,7 +12,7 @@ branch_labels = None
 depends_on = None
 
 
-notification_type_enum = sa.Enum(
+notification_type_enum = postgresql.ENUM(
     "news_alert",
     "market_alert",
     "price_alert",
@@ -20,7 +21,7 @@ notification_type_enum = sa.Enum(
     name="notification_type",
     create_type=False,
 )
-notification_priority_enum = sa.Enum(
+notification_priority_enum = postgresql.ENUM(
     "low",
     "medium",
     "high",

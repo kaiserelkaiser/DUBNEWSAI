@@ -6,7 +6,7 @@ from enum import Enum
 from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Float, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, enum_kwargs
 
 
 class MarketType(str, Enum):
@@ -24,8 +24,8 @@ class StockExchange(str, Enum):
     NYSE = "nyse"
 
 
-market_type_enum = SqlEnum(MarketType, name="market_type")
-stock_exchange_enum = SqlEnum(StockExchange, name="stock_exchange")
+market_type_enum = SqlEnum(MarketType, name="market_type", **enum_kwargs(MarketType))
+stock_exchange_enum = SqlEnum(StockExchange, name="stock_exchange", **enum_kwargs(StockExchange))
 
 
 class MarketData(BaseModel):

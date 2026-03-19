@@ -6,7 +6,7 @@ from typing import Any, TYPE_CHECKING
 from sqlalchemy import Boolean, Enum as SqlEnum, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, enum_kwargs
 
 if TYPE_CHECKING:
     from app.models.news import NewsArticle
@@ -37,12 +37,12 @@ class Notification(BaseModel):
         index=True,
     )
     type: Mapped[NotificationType] = mapped_column(
-        SqlEnum(NotificationType, name="notification_type"),
+        SqlEnum(NotificationType, name="notification_type", **enum_kwargs(NotificationType)),
         nullable=False,
         index=True,
     )
     priority: Mapped[NotificationPriority] = mapped_column(
-        SqlEnum(NotificationPriority, name="notification_priority"),
+        SqlEnum(NotificationPriority, name="notification_priority", **enum_kwargs(NotificationPriority)),
         default=NotificationPriority.MEDIUM,
         nullable=False,
     )

@@ -2,6 +2,7 @@
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -11,14 +12,14 @@ branch_labels = None
 depends_on = None
 
 
-subscription_plan_enum = sa.Enum(
+subscription_plan_enum = postgresql.ENUM(
     "free",
     "premium_monthly",
     "premium_yearly",
     name="subscription_plan",
     create_type=False,
 )
-subscription_status_enum = sa.Enum(
+subscription_status_enum = postgresql.ENUM(
     "active",
     "cancelled",
     "past_due",

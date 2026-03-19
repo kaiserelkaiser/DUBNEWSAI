@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, enum_kwargs
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -36,12 +36,12 @@ class Subscription(BaseModel):
         index=True,
     )
     plan: Mapped[SubscriptionPlan] = mapped_column(
-        SqlEnum(SubscriptionPlan, name="subscription_plan"),
+        SqlEnum(SubscriptionPlan, name="subscription_plan", **enum_kwargs(SubscriptionPlan)),
         nullable=False,
         default=SubscriptionPlan.FREE,
     )
     status: Mapped[SubscriptionStatus] = mapped_column(
-        SqlEnum(SubscriptionStatus, name="subscription_status"),
+        SqlEnum(SubscriptionStatus, name="subscription_status", **enum_kwargs(SubscriptionStatus)),
         nullable=False,
         default=SubscriptionStatus.ACTIVE,
     )

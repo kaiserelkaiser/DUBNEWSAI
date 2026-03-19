@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -32,7 +33,7 @@ def _deserialize_tags(raw_value) -> list[str]:
 
 def upgrade() -> None:
     connection = op.get_bind()
-    news_source_enum = sa.Enum(
+    news_source_enum = postgresql.ENUM(
         "newsapi",
         "rss_gulf_news",
         "rss_the_national",
@@ -44,7 +45,7 @@ def upgrade() -> None:
         name="news_source",
         create_type=False,
     )
-    news_category_enum = sa.Enum(
+    news_category_enum = postgresql.ENUM(
         "real_estate",
         "market",
         "economy",
@@ -55,7 +56,7 @@ def upgrade() -> None:
         name="news_category",
         create_type=False,
     )
-    news_sentiment_enum = sa.Enum(
+    news_sentiment_enum = postgresql.ENUM(
         "positive",
         "neutral",
         "negative",
@@ -287,8 +288,8 @@ def downgrade() -> None:
 
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
-        sa.Enum("positive", "neutral", "negative", name="news_sentiment").drop(bind, checkfirst=True)
-        sa.Enum(
+        postgresql.ENUM("positive", "neutral", "negative", name="news_sentiment").drop(bind, checkfirst=True)
+        postgresql.ENUM(
             "real_estate",
             "market",
             "economy",
@@ -298,7 +299,7 @@ def downgrade() -> None:
             "general",
             name="news_category",
         ).drop(bind, checkfirst=True)
-        sa.Enum(
+        postgresql.ENUM(
             "newsapi",
             "rss_gulf_news",
             "rss_the_national",

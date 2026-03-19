@@ -2,6 +2,7 @@
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -13,7 +14,7 @@ depends_on = None
 
 def upgrade() -> None:
     connection = op.get_bind()
-    market_type_enum = sa.Enum(
+    market_type_enum = postgresql.ENUM(
         "stock",
         "index",
         "currency",
@@ -22,7 +23,7 @@ def upgrade() -> None:
         name="market_type",
         create_type=False,
     )
-    stock_exchange_enum = sa.Enum(
+    stock_exchange_enum = postgresql.ENUM(
         "dfm",
         "adx",
         "nasdaq",
@@ -208,5 +209,5 @@ def downgrade() -> None:
 
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
-        sa.Enum("dfm", "adx", "nasdaq", "nyse", name="stock_exchange").drop(bind, checkfirst=True)
-        sa.Enum("stock", "index", "currency", "commodity", "crypto", name="market_type").drop(bind, checkfirst=True)
+        postgresql.ENUM("dfm", "adx", "nasdaq", "nyse", name="stock_exchange").drop(bind, checkfirst=True)
+        postgresql.ENUM("stock", "index", "currency", "commodity", "crypto", name="market_type").drop(bind, checkfirst=True)

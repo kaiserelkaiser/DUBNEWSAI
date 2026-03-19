@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from enum import Enum
 
 from sqlalchemy import DateTime, MetaData
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -19,6 +20,16 @@ class Base(AsyncAttrs, DeclarativeBase):
     metadata = metadata
 
 
+def enum_values(enum_cls: type[Enum]) -> list[str]:
+    return [str(member.value) for member in enum_cls]
+
+
+def enum_kwargs(enum_cls: type[Enum]) -> dict[str, object]:
+    return {
+        "values_callable": enum_values,
+    }
+
+
 class BaseModel(Base):
     __abstract__ = True
 
@@ -34,4 +45,3 @@ class BaseModel(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-

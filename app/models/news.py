@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, BaseModel
+from app.models.base import Base, BaseModel, enum_kwargs
 
 
 class NewsCategory(str, Enum):
@@ -70,18 +70,22 @@ class NewsArticle(BaseModel):
     url: Mapped[str] = mapped_column(String(1000), unique=True, nullable=False, index=True)
     url_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
 
-    source: Mapped[NewsSource] = mapped_column(SqlEnum(NewsSource, name="news_source"), nullable=False, index=True)
+    source: Mapped[NewsSource] = mapped_column(
+        SqlEnum(NewsSource, name="news_source", **enum_kwargs(NewsSource)),
+        nullable=False,
+        index=True,
+    )
     source_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     author: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     category: Mapped[NewsCategory] = mapped_column(
-        SqlEnum(NewsCategory, name="news_category"),
+        SqlEnum(NewsCategory, name="news_category", **enum_kwargs(NewsCategory)),
         default=NewsCategory.GENERAL,
         nullable=False,
         index=True,
     )
     sentiment: Mapped[NewsSentiment] = mapped_column(
-        SqlEnum(NewsSentiment, name="news_sentiment"),
+        SqlEnum(NewsSentiment, name="news_sentiment", **enum_kwargs(NewsSentiment)),
         default=NewsSentiment.NEUTRAL,
         nullable=False,
         index=True,
