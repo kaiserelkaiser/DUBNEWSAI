@@ -13,8 +13,23 @@ depends_on = None
 
 def upgrade() -> None:
     connection = op.get_bind()
-    market_type_enum = sa.Enum("stock", "index", "currency", "commodity", "crypto", name="market_type")
-    stock_exchange_enum = sa.Enum("dfm", "adx", "nasdaq", "nyse", name="stock_exchange")
+    market_type_enum = sa.Enum(
+        "stock",
+        "index",
+        "currency",
+        "commodity",
+        "crypto",
+        name="market_type",
+        create_type=False,
+    )
+    stock_exchange_enum = sa.Enum(
+        "dfm",
+        "adx",
+        "nasdaq",
+        "nyse",
+        name="stock_exchange",
+        create_type=False,
+    )
 
     if connection.dialect.name == "postgresql":
         market_type_enum.create(connection, checkfirst=True)

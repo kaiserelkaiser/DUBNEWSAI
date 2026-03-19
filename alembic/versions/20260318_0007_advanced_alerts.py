@@ -21,9 +21,24 @@ alert_type_enum = sa.Enum(
     "new_article_category",
     "trend_detected",
     name="alert_type",
+    create_type=False,
 )
-alert_frequency_enum = sa.Enum("instant", "hourly", "daily", "weekly", name="alert_frequency")
-alert_status_enum = sa.Enum("active", "triggered", "expired", "paused", name="alert_status")
+alert_frequency_enum = sa.Enum(
+    "instant",
+    "hourly",
+    "daily",
+    "weekly",
+    name="alert_frequency",
+    create_type=False,
+)
+alert_status_enum = sa.Enum(
+    "active",
+    "triggered",
+    "expired",
+    "paused",
+    name="alert_status",
+    create_type=False,
+)
 
 
 def upgrade() -> None:

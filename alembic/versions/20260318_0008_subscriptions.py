@@ -16,6 +16,7 @@ subscription_plan_enum = sa.Enum(
     "premium_monthly",
     "premium_yearly",
     name="subscription_plan",
+    create_type=False,
 )
 subscription_status_enum = sa.Enum(
     "active",
@@ -23,6 +24,7 @@ subscription_status_enum = sa.Enum(
     "past_due",
     "expired",
     name="subscription_status",
+    create_type=False,
 )
 
 

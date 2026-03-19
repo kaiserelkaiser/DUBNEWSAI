@@ -42,6 +42,7 @@ def upgrade() -> None:
         "twitter",
         "manual",
         name="news_source",
+        create_type=False,
     )
     news_category_enum = sa.Enum(
         "real_estate",
@@ -52,8 +53,15 @@ def upgrade() -> None:
         "infrastructure",
         "general",
         name="news_category",
+        create_type=False,
     )
-    news_sentiment_enum = sa.Enum("positive", "neutral", "negative", name="news_sentiment")
+    news_sentiment_enum = sa.Enum(
+        "positive",
+        "neutral",
+        "negative",
+        name="news_sentiment",
+        create_type=False,
+    )
 
     if connection.dialect.name == "postgresql":
         news_source_enum.create(connection, checkfirst=True)

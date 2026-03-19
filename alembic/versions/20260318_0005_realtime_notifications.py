@@ -18,6 +18,7 @@ notification_type_enum = sa.Enum(
     "system",
     "custom",
     name="notification_type",
+    create_type=False,
 )
 notification_priority_enum = sa.Enum(
     "low",
@@ -25,6 +26,7 @@ notification_priority_enum = sa.Enum(
     "high",
     "urgent",
     name="notification_priority",
+    create_type=False,
 )
 
 
