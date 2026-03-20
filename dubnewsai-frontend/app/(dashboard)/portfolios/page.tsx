@@ -1,11 +1,12 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { BarChart3, BellRing, Briefcase, Plus, ShieldCheck, Target } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { ActionStatus } from "@/components/shared/ActionStatus"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useInvestmentScore, usePortfolioAnalytics, usePortfolios, useWatchlists } from "@/lib/hooks/usePortfolio"
@@ -30,7 +31,7 @@ export default function PortfoliosPage() {
     price: 13.4,
     transaction_type: "buy",
     fees: 8,
-    transaction_date: new Date().toISOString().slice(0, 16)
+    transaction_date: ""
   })
   const [watchlistForm, setWatchlistForm] = useState({
     name: "Opportunity Radar",
@@ -50,6 +51,16 @@ export default function PortfoliosPage() {
     () => portfolios.find((item) => item.id === selectedPortfolioId) || portfolios[0],
     [portfolios, selectedPortfolioId]
   )
+  useEffect(() => {
+    setTransactionForm((current) =>
+      current.transaction_date
+        ? current
+        : {
+            ...current,
+            transaction_date: new Date().toISOString().slice(0, 16)
+          }
+    )
+  }, [])
   const { data: analytics } = usePortfolioAnalytics(selectedPortfolio?.id)
   const { data: investmentScore } = useInvestmentScore(scoreSymbol, riskProfile)
 
@@ -107,8 +118,8 @@ export default function PortfoliosPage() {
       <div className="space-y-8">
         <PremiumPageHero
           eyebrow="Investor intelligence"
-          title="Manage portfolios, test ideas, and score opportunities without leaving the intelligence stack."
-          description="Phase 2 turns DUBNEWSAI into an investor workspace with portfolio tracking, allocation analytics, watchlists, and symbol scoring grounded in the market and news graph."
+          title="Run portfolios, watchlists, and symbol scoring from one investor workspace."
+          description="A lighter command surface for tracking books, logging trades, and screening new ideas."
           chips={["Portfolio tracking", "Watchlists", "Risk view", "Investment scoring"]}
           stats={[
             {
@@ -138,7 +149,7 @@ export default function PortfoliosPage() {
         <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <article className="panel-premium p-6 sm:p-8">
             <p className="story-kicker">Portfolio creation</p>
-            <h2 className="mt-4 text-3xl font-semibold text-white">Launch a new sleeve</h2>
+            <h2 className="mt-4 text-3xl font-semibold text-white">Create a portfolio</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <Field label="Name">
                 <input
@@ -174,10 +185,16 @@ export default function PortfoliosPage() {
                 />
               </Field>
             </div>
-            <button onClick={() => createPortfolio.mutate()} className="action-premium mt-6">
+            <button onClick={() => createPortfolio.mutate()} className="action-premium mt-6" disabled={createPortfolio.isPending}>
               <Plus className="h-4 w-4" />
-              Create portfolio
+              {createPortfolio.isPending ? "Creating..." : "Create portfolio"}
             </button>
+            <ActionStatus
+              isPending={createPortfolio.isPending}
+              isSuccess={createPortfolio.isSuccess}
+              error={createPortfolio.error}
+              successMessage="Portfolio created."
+            />
 
             <div className="mt-8 space-y-3">
               {portfolios.map((portfolio) => (
@@ -279,10 +296,16 @@ export default function PortfoliosPage() {
                       />
                     </Field>
                   </div>
-                  <button onClick={() => addTransaction.mutate()} className="action-premium mt-5">
+                  <button onClick={() => addTransaction.mutate()} className="action-premium mt-5" disabled={addTransaction.isPending}>
                     <Briefcase className="h-4 w-4" />
-                    Add transaction
+                    {addTransaction.isPending ? "Saving..." : "Add transaction"}
                   </button>
+                  <ActionStatus
+                    isPending={addTransaction.isPending}
+                    isSuccess={addTransaction.isSuccess}
+                    error={addTransaction.error}
+                    successMessage="Transaction saved."
+                  />
                 </div>
               </>
             ) : (
@@ -343,7 +366,7 @@ export default function PortfoliosPage() {
 
           <article className="panel-premium p-6 sm:p-8">
             <p className="story-kicker">Investment scoring</p>
-            <h2 className="mt-4 text-3xl font-semibold text-white">Score a symbol with the platform’s own context graph</h2>
+            <h2 className="mt-4 text-3xl font-semibold text-white">Score a symbol with live platform context</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <Field label="Symbol">
                 <input className="input-premium" value={scoreSymbol} onChange={(event) => setScoreSymbol(event.target.value.toUpperCase())} />
@@ -368,8 +391,22 @@ export default function PortfoliosPage() {
                   <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Rationale</div>
                   <p className="mt-3 text-sm leading-7 text-white/60">{investmentScore.rationale}</p>
                   <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <MetricRow label="Target price" value={formatCompactCurrency(investmentScore.target_price, "AED")} />
-                    <MetricRow label="Stop loss" value={formatCompactCurrency(investmentScore.stop_loss, "AED")} />
+                    <MetricRow
+                      label="Target price"
+                      value={
+                        investmentScore.target_price !== undefined
+                          ? formatCompactCurrency(investmentScore.target_price, "AED")
+                          : "Unavailable"
+                      }
+                    />
+                    <MetricRow
+                      label="Stop loss"
+                      value={
+                        investmentScore.stop_loss !== undefined
+                          ? formatCompactCurrency(investmentScore.stop_loss, "AED")
+                          : "Unavailable"
+                      }
+                    />
                     <MetricRow label="Time horizon" value={investmentScore.time_horizon} />
                     <MetricRow label="Generated" value={formatDateTime(investmentScore.generated_at)} />
                   </div>
@@ -398,10 +435,16 @@ export default function PortfoliosPage() {
               <Field label="Description">
                 <input className="input-premium" value={watchlistForm.description} onChange={(event) => setWatchlistForm((current) => ({ ...current, description: event.target.value }))} />
               </Field>
-              <button onClick={() => createWatchlist.mutate()} className="action-premium">
+              <button onClick={() => createWatchlist.mutate()} className="action-premium" disabled={createWatchlist.isPending}>
                 <BellRing className="h-4 w-4" />
-                Create watchlist
+                {createWatchlist.isPending ? "Creating..." : "Create watchlist"}
               </button>
+              <ActionStatus
+                isPending={createWatchlist.isPending}
+                isSuccess={createWatchlist.isSuccess}
+                error={createWatchlist.error}
+                successMessage="Watchlist created."
+              />
             </div>
 
             <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
@@ -426,10 +469,20 @@ export default function PortfoliosPage() {
                   <input className="input-premium" value={watchlistItemForm.notes} onChange={(event) => setWatchlistItemForm((current) => ({ ...current, notes: event.target.value }))} />
                 </Field>
               </div>
-              <button onClick={() => addWatchlistItem.mutate()} className="action-premium mt-5" disabled={!watchlists.length}>
+              <button
+                onClick={() => addWatchlistItem.mutate()}
+                className="action-premium mt-5"
+                disabled={!watchlists.length || addWatchlistItem.isPending}
+              >
                 <Plus className="h-4 w-4" />
-                Add to first watchlist
+                {addWatchlistItem.isPending ? "Adding..." : "Add to first watchlist"}
               </button>
+              <ActionStatus
+                isPending={addWatchlistItem.isPending}
+                isSuccess={addWatchlistItem.isSuccess}
+                error={addWatchlistItem.error}
+                successMessage="Watchlist item added."
+              />
             </div>
           </article>
 

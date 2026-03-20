@@ -71,9 +71,9 @@ export interface CompetitorAnalysis {
 
 export interface PricePrediction {
   symbol: string
-  current_price: number
-  forecast_horizon_days: number
-  prediction: {
+  current_price?: number
+  forecast_horizon_days?: number
+  prediction?: {
     target_price: number
     expected_return_percent: number
     confidence_interval: {
@@ -81,18 +81,19 @@ export interface PricePrediction {
       upper: number
     }
   }
-  trend: {
+  trend?: {
     direction: string
     strength: number
     slope: number
   }
-  forecast_series: { days_ahead: number; predicted_price: number; upper_bound: number; lower_bound: number }[]
-  model_info: {
+  forecast_series?: { days_ahead: number; predicted_price: number; upper_bound: number; lower_bound: number }[]
+  model_info?: {
     method: string
     r_squared: number
     data_points: number
   }
-  generated_at: string
+  generated_at?: string
+  error?: string
 }
 
 export interface MarketTrendPrediction {
@@ -109,20 +110,21 @@ export interface MarketTrendPrediction {
 export interface PropertyTrendPrediction {
   location: string
   property_type: string
-  current_avg_price: number
-  yoy_growth_percent: number
-  forecast_12m: {
+  current_avg_price?: number
+  yoy_growth_percent?: number
+  forecast_12m?: {
     predicted_price: number
     expected_appreciation: number
     trend: string
   }
-  monthly_forecast: { month: number; predicted_price: number }[]
-  confidence: string
-  data_quality: {
+  monthly_forecast?: { month: number; predicted_price: number }[]
+  confidence?: string
+  data_quality?: {
     r_squared: number
     data_points: number
   }
-  generated_at: string
+  generated_at?: string
+  error?: string
 }
 
 export interface ExecutiveDashboard {

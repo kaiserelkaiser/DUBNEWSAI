@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.core.rate_limit import check_tiered_rate_limit
 from app.database import get_db
-from app.dependencies import require_premium
+from app.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.enterprise import SharedItemCreateRequest, TeamCreateRequest, TeamMemberCreateRequest, TeamResponse
 from app.services.collaboration import team_service
@@ -23,7 +23,7 @@ def _ensure_enabled() -> None:
 @router.get("/", response_model=list[TeamResponse])
 async def list_teams(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[TeamResponse]:
     _ensure_enabled()
@@ -35,7 +35,7 @@ async def list_teams(
 async def create_team(
     payload: TeamCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> TeamResponse:
     _ensure_enabled()
@@ -48,7 +48,7 @@ async def add_team_member(
     team_id: int,
     payload: TeamMemberCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> dict:
     _ensure_enabled()
@@ -66,7 +66,7 @@ async def share_team_item(
     team_id: int,
     payload: SharedItemCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> dict:
     _ensure_enabled()
@@ -87,7 +87,7 @@ async def share_team_item(
 async def get_team_activity(
     team_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[dict]:
     _ensure_enabled()

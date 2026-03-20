@@ -1,8 +1,9 @@
 import axios from "axios"
 
+import { normalizeApiBaseUrl } from "@/lib/config/api"
 import { useAuthStore } from "@/lib/store/authStore"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+const API_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL)
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -85,8 +86,11 @@ apiClient.interceptors.response.use(
     }
 
     if (typeof window !== "undefined" && error.response?.status === 401) {
-      useAuthStore.getState().clearAuth()
-      if (window.location.pathname !== "/login") {
+      const { hydrated, accessToken } = useAuthStore.getState()
+      if (hydrated && accessToken) {
+        useAuthStore.getState().clearAuth()
+      }
+      if (hydrated && accessToken && window.location.pathname !== "/login") {
         window.location.href = "/login"
       }
     }

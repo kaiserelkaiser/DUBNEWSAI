@@ -1,11 +1,11 @@
 "use client"
 
-import { formatDistanceToNow } from "date-fns"
 import { motion } from "framer-motion"
 import { ArrowUpRight, Clock3, Eye, Layers3, Sparkles } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
+import { RelativeTime } from "@/components/shared/RelativeTime"
 import { SentimentBadge } from "./SentimentBadge"
 import type { NewsArticle } from "@/types"
 import { titleCase } from "@/lib/utils/formatters"
@@ -82,7 +82,7 @@ export function NewsCard({
         <div className="flex flex-1 flex-col p-6">
           <div className="mb-3 flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.22em] text-white/42">
             <span>{article.source_name || "DUBNEWSAI"}</span>
-            <span>{formatDistanceToNow(new Date(article.published_at), { addSuffix: true })}</span>
+            <RelativeTime value={article.published_at} />
           </div>
 
           <h3 className={`text-balance text-white transition-colors group-hover:text-cyan-100 ${featured ? "text-3xl font-semibold leading-[1.08]" : "text-xl font-semibold leading-[1.18]"}`}>

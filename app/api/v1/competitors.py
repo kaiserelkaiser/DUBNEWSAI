@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rate_limit import check_tiered_rate_limit
 from app.database import get_db
-from app.dependencies import get_current_user_optional, require_premium
+from app.dependencies import get_current_user, get_current_user_optional
 from app.models.user import User
 from app.schemas.enterprise import CompetitorCreateRequest, CompetitorResponse
 from app.services.competitive_intelligence import competitor_service
@@ -43,7 +43,7 @@ async def list_competitors(
 async def create_competitor(
     payload: CompetitorCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> CompetitorResponse:
     del current_user

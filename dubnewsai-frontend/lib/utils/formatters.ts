@@ -17,7 +17,8 @@ export function formatCompactNumber(value: number) {
 export function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-AE", {
     dateStyle: "medium",
-    timeStyle: "short"
+    timeStyle: "short",
+    timeZone: "Asia/Dubai"
   }).format(new Date(value))
 }
 

@@ -84,8 +84,8 @@ export interface InvestmentScore {
   rationale: string
   key_factors: string[]
   risks: string[]
-  target_price: number
-  stop_loss: number
+  target_price?: number
+  stop_loss?: number
   time_horizon: string
   generated_at: string
 }

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.core.rate_limit import check_tiered_rate_limit
 from app.database import get_db
-from app.dependencies import require_premium
+from app.dependencies import get_current_user
 from app.models.user import User
 from app.services.executive import executive_dashboard
 
@@ -23,7 +23,7 @@ def _ensure_enabled() -> None:
 async def get_executive_dashboard(
     time_period: str = Query(default="30d"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> dict:
     del current_user
@@ -35,7 +35,7 @@ async def get_executive_dashboard(
 async def get_executive_summary(
     time_period: str = Query(default="30d"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> dict:
     del current_user
@@ -48,7 +48,7 @@ async def get_executive_summary(
 async def get_executive_priorities(
     time_period: str = Query(default="30d"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[dict]:
     del current_user

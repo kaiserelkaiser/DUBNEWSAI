@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { apiClient } from "@/lib/api/client"
+import { useAuthStore } from "@/lib/store/authStore"
 import type {
   ApiKeyRecord,
   Competitor,
@@ -72,52 +73,71 @@ export function usePropertyTrend(location?: string, propertyType = "apartment") 
 }
 
 export function useExecutiveDashboard(period = "30d") {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<ExecutiveDashboard>({
     queryKey: ["executive", period],
     queryFn: async () => {
       const { data } = await apiClient.get<ExecutiveDashboard>("/executive/dashboard", { params: { time_period: period } })
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }
 
 export function useTeams() {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<Team[]>({
     queryKey: ["teams"],
     queryFn: async () => {
       const { data } = await apiClient.get<Team[]>("/teams")
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }
 
 export function useTeamActivity(teamId?: number) {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<TeamActivity[]>({
     queryKey: ["teams", teamId, "activity"],
     queryFn: async () => {
       const { data } = await apiClient.get<TeamActivity[]>(`/teams/${teamId}/activity`)
       return data
     },
-    enabled: Boolean(teamId)
+    enabled: hydrated && Boolean(accessToken) && Boolean(teamId),
+    retry: false
   })
 }
 
 export function useApiKeys() {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<ApiKeyRecord[]>({
     queryKey: ["settings", "api-keys"],
     queryFn: async () => {
       const { data } = await apiClient.get<ApiKeyRecord[]>("/settings/api-keys")
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }
 
 export function useWhiteLabelConfig() {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<WhiteLabelConfig | null>({
     queryKey: ["settings", "white-label"],
     queryFn: async () => {
       const { data } = await apiClient.get<WhiteLabelConfig | null>("/settings/white-label")
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }

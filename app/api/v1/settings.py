@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rate_limit import check_tiered_rate_limit
 from app.database import get_db
-from app.dependencies import require_premium
+from app.dependencies import get_current_user
 from app.models.api_access import APIKey
 from app.models.user import User
 from app.models.white_label import WhiteLabelConfig
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 @router.get("/api-keys", response_model=list[APIKeyResponse])
 async def list_api_keys(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[APIKeyResponse]:
     result = await db.execute(select(APIKey).where(APIKey.user_id == current_user.id).order_by(APIKey.created_at.desc()))
@@ -38,7 +38,7 @@ async def list_api_keys(
 async def create_api_key(
     payload: APIKeyCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> APIKeyCreatedResponse:
     plaintext = f"dna_{secrets.token_urlsafe(24)}"
@@ -58,7 +58,7 @@ async def create_api_key(
 @router.get("/white-label", response_model=WhiteLabelConfigResponse | None)
 async def get_white_label_config(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> WhiteLabelConfigResponse | None:
     result = await db.execute(select(WhiteLabelConfig).where(WhiteLabelConfig.user_id == current_user.id))
@@ -70,7 +70,7 @@ async def get_white_label_config(
 async def upsert_white_label_config(
     payload: WhiteLabelConfigRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_premium),
+    current_user: User = Depends(get_current_user),
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> WhiteLabelConfigResponse:
     result = await db.execute(select(WhiteLabelConfig).where(WhiteLabelConfig.user_id == current_user.id))

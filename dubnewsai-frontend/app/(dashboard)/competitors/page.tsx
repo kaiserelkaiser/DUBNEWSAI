@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, Building2, Crosshair, Newspaper, Plus, ShieldAlert, Swords, TrendingUp } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { ActionStatus } from "@/components/shared/ActionStatus"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useCompetitorAnalysis, useCompetitors } from "@/lib/hooks/useEnterprise"
@@ -44,7 +45,7 @@ export default function CompetitorsPage() {
         <PremiumPageHero
           eyebrow="Competitive intelligence"
           title="Map rival momentum, media pressure, and strategic exposure from one premium command surface."
-          description="Track developers, exchanges, and adjacent players through SWOT automation, news intelligence, threat scoring, and market-position context built directly on the DUBNEWSAI graph."
+          description="Track rivals through SWOT, media pressure, and threat scoring without drowning the user in noise."
           chips={["SWOT automation", "Threat scoring", "Narrative drift", "Market position"]}
           stats={[
             { label: "Tracked competitors", value: `${competitors.length}`, hint: "Seeded and manually added profiles" },
@@ -106,10 +107,16 @@ export default function CompetitorsPage() {
                   <input type="number" className="input-premium" value={form.market_share_percent} onChange={(event) => setForm((current) => ({ ...current, market_share_percent: Number(event.target.value) }))} />
                 </Field>
               </div>
-              <button onClick={() => createCompetitor.mutate()} className="action-premium mt-5">
+              <button onClick={() => createCompetitor.mutate()} className="action-premium mt-5" disabled={createCompetitor.isPending}>
                 <Plus className="h-4 w-4" />
-                Add competitor
+                {createCompetitor.isPending ? "Saving..." : "Add competitor"}
               </button>
+              <ActionStatus
+                isPending={createCompetitor.isPending}
+                isSuccess={createCompetitor.isSuccess}
+                error={createCompetitor.error}
+                successMessage="Competitor added."
+              />
             </div>
           </article>
 

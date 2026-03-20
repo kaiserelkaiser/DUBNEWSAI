@@ -29,7 +29,10 @@ async def get_price_prediction(
 ) -> dict:
     del current_user
     _ensure_enabled()
-    return await forecast_service.predict_price_movement(db, symbol.upper(), days_ahead=days_ahead)
+    payload = await forecast_service.predict_price_movement(db, symbol.upper(), days_ahead=days_ahead)
+    if "error" in payload:
+        raise HTTPException(status_code=422, detail=payload["error"])
+    return payload
 
 
 @router.get("/market-trend")
@@ -53,4 +56,7 @@ async def get_property_trend_prediction(
 ) -> dict:
     del current_user
     _ensure_enabled()
-    return await forecast_service.predict_property_value_trend(location=location, property_type=property_type)
+    payload = await forecast_service.predict_property_value_trend(location=location, property_type=property_type)
+    if "error" in payload:
+        raise HTTPException(status_code=422, detail=payload["error"])
+    return payload

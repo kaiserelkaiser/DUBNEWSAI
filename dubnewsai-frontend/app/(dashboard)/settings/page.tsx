@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Bell, Building2, KeyRound, Palette, ShieldCheck, SlidersHorizontal, Waves, Workflow } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { ActionStatus } from "@/components/shared/ActionStatus"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
@@ -94,7 +95,7 @@ export default function SettingsPage() {
         <PremiumPageHero
           eyebrow="Workspace settings"
           title="Settings should feel like command infrastructure, not a demo page."
-          description="DUBNEWSAI settings now frame identity, notification posture, workspace behavior, and operating preferences as part of a real enterprise workspace."
+          description="A calmer settings surface for identity, alerts, API access, and white-label controls."
           chips={["Operator identity", "Inbox posture", "Workspace policy", "Delivery controls"]}
           stats={[
             {
@@ -137,10 +138,10 @@ export default function SettingsPage() {
               <p className="story-kicker">Workspace posture</p>
               <h2 className="mt-4 text-3xl font-semibold text-white">Operational defaults</h2>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <SettingTile icon={Workflow} label="Alert delivery" value="Realtime + webhook ready" text="Designed for immediate operator response and automation handoff." />
-                <SettingTile icon={Waves} label="Data cadence" value="Continuous refresh" text="News and market layers keep refreshing in the background." />
-                <SettingTile icon={ShieldCheck} label="Security posture" value="Authenticated workspace" text="Role-aware access and operator identity are surfaced as first-class context." />
-                <SettingTile icon={Building2} label="Deployment mode" value="Production linked" text="Frontend and backend are attached to active deployment infrastructure." />
+                <SettingTile icon={Workflow} label="Alert delivery" value="Realtime + webhook ready" text="Built for fast follow-up." />
+                <SettingTile icon={Waves} label="Data cadence" value="Continuous refresh" text="Signals stay current in the background." />
+                <SettingTile icon={ShieldCheck} label="Security posture" value="Authenticated workspace" text="Role-aware access is active." />
+                <SettingTile icon={Building2} label="Deployment mode" value="Production linked" text="Connected to live infrastructure." />
               </div>
             </article>
 
@@ -157,10 +158,16 @@ export default function SettingsPage() {
                   <input type="number" className="input-premium" value={apiKeyForm.rate_limit_per_hour} onChange={(event) => setApiKeyForm((current) => ({ ...current, rate_limit_per_hour: Number(event.target.value) }))} />
                 </label>
               </div>
-              <button type="button" onClick={() => createApiKey.mutate()} className="action-premium mt-5">
+              <button type="button" onClick={() => createApiKey.mutate()} className="action-premium mt-5" disabled={createApiKey.isPending}>
                 <KeyRound className="h-4 w-4" />
-                Create API key
+                {createApiKey.isPending ? "Creating..." : "Create API key"}
               </button>
+              <ActionStatus
+                isPending={createApiKey.isPending}
+                isSuccess={createApiKey.isSuccess}
+                error={createApiKey.error}
+                successMessage="API key created."
+              />
               {plaintextKey ? (
                 <div className="mt-5 rounded-[1.4rem] border border-cyan-300/20 bg-cyan-300/[0.06] p-4">
                   <div className="text-[10px] uppercase tracking-[0.28em] text-cyan-100/70">New key</div>
@@ -272,10 +279,16 @@ export default function SettingsPage() {
                 <ControlPill icon={KeyRound} label="API layer" value={whiteLabelForm.api_enabled ? "Enabled" : "Disabled"} />
                 <ControlPill icon={Workflow} label="Rate limit" value={`${whiteLabelForm.api_rate_limit}/hr`} />
               </div>
-              <button type="button" onClick={() => saveWhiteLabel.mutate()} className="action-premium mt-6">
+              <button type="button" onClick={() => saveWhiteLabel.mutate()} className="action-premium mt-6" disabled={saveWhiteLabel.isPending}>
                 <Palette className="h-4 w-4" />
-                Save white-label config
+                {saveWhiteLabel.isPending ? "Saving..." : "Save white-label config"}
               </button>
+              <ActionStatus
+                isPending={saveWhiteLabel.isPending}
+                isSuccess={saveWhiteLabel.isSuccess}
+                error={saveWhiteLabel.error}
+                successMessage="White-label settings saved."
+              />
             </article>
           </div>
         </section>

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Building2, Plus, Share2, Users2, Workflow } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { ActionStatus } from "@/components/shared/ActionStatus"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useTeamActivity, useTeams } from "@/lib/hooks/useEnterprise"
@@ -56,7 +57,7 @@ export default function TeamsPage() {
         <PremiumPageHero
           eyebrow="Team collaboration"
           title="Share portfolios, insights, and decisions inside a live strategy workspace."
-          description="Phase 6 gives DUBNEWSAI the collaboration layer it needs for real firms: shared items, team activity, role-based membership, and an operating history that can be audited."
+          description="A simpler collaboration layer for sharing books, insights, and activity across the team."
           chips={["Shared portfolios", "Team activity", "Role-aware membership", "Operational memory"]}
           stats={[
             { label: "Teams", value: `${teams.length}`, hint: "Active collaboration spaces in this workspace" },
@@ -103,10 +104,16 @@ export default function TeamsPage() {
                   <input className="input-premium" value={teamForm.description} onChange={(event) => setTeamForm((current) => ({ ...current, description: event.target.value }))} />
                 </Field>
               </div>
-              <button onClick={() => createTeam.mutate()} className="action-premium mt-5">
+              <button onClick={() => createTeam.mutate()} className="action-premium mt-5" disabled={createTeam.isPending}>
                 <Plus className="h-4 w-4" />
-                Create team
+                {createTeam.isPending ? "Creating..." : "Create team"}
               </button>
+              <ActionStatus
+                isPending={createTeam.isPending}
+                isSuccess={createTeam.isSuccess}
+                error={createTeam.error}
+                successMessage="Team created."
+              />
             </div>
           </article>
 
@@ -136,10 +143,16 @@ export default function TeamsPage() {
                         </select>
                       </Field>
                     </div>
-                    <button onClick={() => addMember.mutate()} className="action-premium mt-5">
+                    <button onClick={() => addMember.mutate()} className="action-premium mt-5" disabled={addMember.isPending}>
                       <Users2 className="h-4 w-4" />
-                      Add member
+                      {addMember.isPending ? "Adding..." : "Add member"}
                     </button>
+                    <ActionStatus
+                      isPending={addMember.isPending}
+                      isSuccess={addMember.isSuccess}
+                      error={addMember.error}
+                      successMessage="Member added."
+                    />
                   </div>
 
                   <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
@@ -160,10 +173,16 @@ export default function TeamsPage() {
                         <input className="input-premium" value={shareForm.item_name} onChange={(event) => setShareForm((current) => ({ ...current, item_name: event.target.value }))} />
                       </Field>
                     </div>
-                    <button onClick={() => shareItem.mutate()} className="action-premium mt-5">
+                    <button onClick={() => shareItem.mutate()} className="action-premium mt-5" disabled={shareItem.isPending}>
                       <Share2 className="h-4 w-4" />
-                      Share into team
+                      {shareItem.isPending ? "Sharing..." : "Share into team"}
                     </button>
+                    <ActionStatus
+                      isPending={shareItem.isPending}
+                      isSuccess={shareItem.isSuccess}
+                      error={shareItem.error}
+                      successMessage="Item shared with team."
+                    />
                   </div>
                 </div>
 

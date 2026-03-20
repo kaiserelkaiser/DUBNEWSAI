@@ -3,40 +3,54 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { apiClient } from "@/lib/api/client"
+import { useAuthStore } from "@/lib/store/authStore"
 import type { InvestmentScore, Portfolio, PortfolioAnalytics, Watchlist } from "@/types"
 
 export function usePortfolios() {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<Portfolio[]>({
     queryKey: ["portfolios"],
     queryFn: async () => {
       const { data } = await apiClient.get<Portfolio[]>("/portfolios")
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }
 
 export function usePortfolioAnalytics(portfolioId?: number) {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<PortfolioAnalytics>({
     queryKey: ["portfolios", portfolioId, "analytics"],
     queryFn: async () => {
       const { data } = await apiClient.get<PortfolioAnalytics>(`/portfolios/id/${portfolioId}/analytics`)
       return data
     },
-    enabled: Boolean(portfolioId)
+    enabled: hydrated && Boolean(accessToken) && Boolean(portfolioId),
+    retry: false
   })
 }
 
 export function useWatchlists() {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<Watchlist[]>({
     queryKey: ["watchlists"],
     queryFn: async () => {
       const { data } = await apiClient.get<Watchlist[]>("/portfolios/watchlists")
       return data
-    }
+    },
+    enabled: hydrated && Boolean(accessToken),
+    retry: false
   })
 }
 
 export function useInvestmentScore(symbol?: string, riskProfile = "moderate") {
+  const { accessToken, hydrated } = useAuthStore()
+
   return useQuery<InvestmentScore>({
     queryKey: ["investment-score", symbol, riskProfile],
     queryFn: async () => {
@@ -45,6 +59,7 @@ export function useInvestmentScore(symbol?: string, riskProfile = "moderate") {
       })
       return data
     },
-    enabled: Boolean(symbol)
+    enabled: hydrated && Boolean(accessToken) && Boolean(symbol),
+    retry: false
   })
 }

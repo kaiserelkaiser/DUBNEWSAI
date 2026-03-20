@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowUpRight, Eye, Layers3, Link2, ScanSearch } from "lucide
 
 import { ContainerScroll } from "@/components/ui/container-scroll-animation"
 import { SentimentBadge } from "@/components/news/SentimentBadge"
+import { getDefaultAppUrl, normalizeApiBaseUrl } from "@/lib/config/api"
 import type { NewsArticle } from "@/types"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
 
@@ -15,12 +16,9 @@ interface ArticlePageProps {
   }
 }
 
-const API_URL =
-  process.env.INTERNAL_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000/api/v1"
+const API_URL = normalizeApiBaseUrl(process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL)
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+const APP_URL = getDefaultAppUrl(process.env.NEXT_PUBLIC_APP_URL)
 
 async function getArticle(id: string): Promise<NewsArticle | null> {
   try {

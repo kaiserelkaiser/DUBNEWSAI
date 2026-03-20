@@ -1,12 +1,12 @@
 "use client"
 
-import { formatDistanceToNow } from "date-fns"
 import { motion } from "framer-motion"
 import { ArrowRight, Layers3, Newspaper, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 import { NewsCard } from "@/components/news/NewsCard"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
+import { RelativeTime } from "@/components/shared/RelativeTime"
 import { useNews } from "@/lib/hooks/useNews"
 
 export function NewsFeed({
@@ -145,7 +145,7 @@ export function NewsFeed({
                       ) : null}
                     </div>
                     <div className="mt-3 text-xs text-white/42">
-                      {formatDistanceToNow(new Date(article.published_at), { addSuffix: true })}
+                      <RelativeTime value={article.published_at} />
                     </div>
                   </Link>
                 </motion.div>
