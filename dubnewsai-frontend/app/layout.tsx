@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Merriweather, Space_Grotesk } from "next/font/go
 import type { ReactNode } from "react"
 
 import "./globals.css"
+import { getDefaultAppUrl } from "@/lib/config/api"
 import { Providers } from "./providers"
 import { Toaster } from "react-hot-toast"
 
@@ -32,7 +33,7 @@ const editorial = Merriweather({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(getDefaultAppUrl(process.env.NEXT_PUBLIC_APP_URL)),
   title: "DUBNEWSAI - Dubai Real Estate Intelligence Platform",
   description: "Advanced real-time intelligence for Dubai real estate market",
   keywords: ["Dubai", "Real Estate", "Market Intelligence", "AI", "Analytics"]

@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react"
 import toast from "react-hot-toast"
 
+import { getDefaultWsUrl } from "@/lib/config/api"
 import { useAuthStore } from "@/lib/store/authStore"
 import { useNotificationStore } from "@/lib/store/notificationStore"
 import type { NotificationItem } from "@/types"
@@ -37,7 +38,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    const wsBase = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"
+    const wsBase = getDefaultWsUrl(process.env.NEXT_PUBLIC_WS_URL)
     const url = `${wsBase.replace(/\/$/, "")}/api/v1/ws?token=${encodeURIComponent(accessToken)}`
     const socket = new WebSocket(url)
 
