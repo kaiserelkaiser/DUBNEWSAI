@@ -33,6 +33,19 @@ class NewsAggregationResult:
 
 class NewsAggregator:
     DEFAULT_QUERY = "Dubai real estate"
+    PROVIDER_POLL_MINUTES: dict[str, int] = {
+        "rss_feeds": 2,
+        "web_scrapers": 5,
+        "currents": 5,
+        "thenewsapi": 10,
+        "newsapi_ai": 10,
+        "newsdata": 10,
+        "gnews": 20,
+        "newsapi": 20,
+        "mediastack": 30,
+        "contextual_web": 30,
+        "bing_news": 180,
+    }
 
     def __init__(self) -> None:
         self.registry = provider_registry
@@ -48,6 +61,7 @@ class NewsAggregator:
         effective_query = query or self.DEFAULT_QUERY
         provider_stats: dict[str, dict[str, object]] = {}
         raw_records: list[NormalizedNewsRecord] = []
+        now = datetime.now(timezone.utc)
 
         aggregator = FreeDataAggregator()
         try:
@@ -58,10 +72,18 @@ class NewsAggregator:
                 and (include_scraped or provider.name != "web_scrapers")
             ]
 
-            tasks = [self._fetch_from_provider(aggregator, provider, effective_query) for provider in providers]
+            scheduled_providers: list[ProviderConfig] = []
+            tasks: list[object] = []
+            for provider in providers:
+                if not self._should_poll_provider(provider.name, now):
+                    provider_stats[provider.name] = self._provider_skipped_stats(provider.name)
+                    continue
+                scheduled_providers.append(provider)
+                tasks.append(self._fetch_from_provider(aggregator, provider, effective_query))
+
             results = await self._gather(tasks)
 
-            for provider, result in zip(providers, results):
+            for provider, result in zip(scheduled_providers, results):
                 if isinstance(result, Exception):
                     provider_stats[provider.name] = self._provider_error_stats(provider.name, result)
                     continue
@@ -85,6 +107,14 @@ class NewsAggregator:
             )
         finally:
             await aggregator.close()
+
+    @classmethod
+    def _should_poll_provider(cls, provider_name: str, now: datetime) -> bool:
+        cadence_minutes = cls.PROVIDER_POLL_MINUTES.get(provider_name, 15)
+        if cadence_minutes <= 1:
+            return True
+        minute_of_day = now.hour * 60 + now.minute
+        return minute_of_day % cadence_minutes == 0
 
     async def _gather(self, tasks: list[object]) -> list[object]:
         import asyncio
@@ -141,6 +171,17 @@ class NewsAggregator:
             "state": state.state,
             "reliability": state.reliability,
             "last_error": str(error),
+        }
+
+    @staticmethod
+    def _provider_skipped_stats(provider_name: str) -> dict[str, object]:
+        state = provider_health.snapshot(provider_name)
+        return {
+            "status": "skipped",
+            "count": 0,
+            "state": state.state,
+            "reliability": state.reliability,
+            "last_error": None,
         }
 
     @staticmethod

@@ -29,6 +29,7 @@ class NewsService:
         r"view source version.*?$",
         r"to view the source version of this press release.*?$",
     )
+    ARTICLE_LEAD_MAX_CHARS = 420
 
     @staticmethod
     def generate_url_hash(url: str) -> str:
@@ -64,6 +65,38 @@ class NewsService:
             for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"'])", value)
             if sentence and sentence.strip()
         ]
+
+    @classmethod
+    def _derive_lead_summary(
+        cls,
+        primary_text: str | None,
+        fallback_text: str | None = None,
+        *,
+        max_chars: int | None = None,
+    ) -> str | None:
+        max_chars = max_chars or cls.ARTICLE_LEAD_MAX_CHARS
+        candidate = cls._strip_article_boilerplate(primary_text) or cls._strip_article_boilerplate(fallback_text)
+        if not candidate:
+            return None
+
+        candidate = cls._normalize_text_blob(candidate) or candidate
+        sentences = cls._sentences_from_text(candidate)
+        if not sentences:
+            return candidate[:max_chars].strip(" \n-:;,")
+
+        summary_parts: list[str] = []
+        current_length = 0
+        for sentence in sentences[:3]:
+            next_length = current_length + len(sentence) + (1 if summary_parts else 0)
+            if summary_parts and next_length > max_chars:
+                break
+            summary_parts.append(sentence)
+            current_length = next_length
+
+        summary = " ".join(summary_parts).strip()
+        if not summary:
+            summary = candidate[:max_chars]
+        return summary[:max_chars].strip(" \n-:;,")
 
     @classmethod
     def _paragraphize_content(cls, content: str | None) -> str | None:
@@ -103,21 +136,27 @@ class NewsService:
         normalized_description = cls._normalize_text_blob(description)
         normalized_content = cls._paragraphize_content(content)
 
+        if normalized_description and len(normalized_description) > cls.ARTICLE_LEAD_MAX_CHARS:
+            normalized_description = cls._derive_lead_summary(normalized_description, normalized_content)
+
         if not normalized_content:
+            normalized_description = normalized_description or cls._derive_lead_summary(None, content)
             return normalized_description, normalized_content
         if not normalized_description:
-            sentences = cls._sentences_from_text(normalized_content)
-            derived_description = " ".join(sentences[:2]).strip() if sentences else None
+            derived_description = cls._derive_lead_summary(normalized_content)
             return derived_description or None, normalized_content
 
         desc_lower = normalized_description.lower().strip()
         content_lower = normalized_content.lower().strip()
+        if content_lower == desc_lower:
+            return normalized_description, None
         if content_lower.startswith(desc_lower):
             trimmed = normalized_content[len(normalized_description) :].strip(" \n-:;,")
-            normalized_content = cls._paragraphize_content(trimmed) or normalized_content
+            normalized_content = cls._paragraphize_content(trimmed)
         elif desc_lower in content_lower[: min(len(content_lower), len(desc_lower) + 80)]:
             trimmed = re.sub(re.escape(normalized_description), "", normalized_content, count=1, flags=re.IGNORECASE).strip(" \n-:;,")
-            normalized_content = cls._paragraphize_content(trimmed) or normalized_content
+            normalized_content = cls._paragraphize_content(trimmed)
+        normalized_description = cls._derive_lead_summary(normalized_description, normalized_content)
         return normalized_description, normalized_content
 
     @classmethod

@@ -225,6 +225,8 @@ class MarketAggregator:
             "world_bank": "world_bank",
             "trading_economics": "trading_economics",
             "alpha_vantage": "alpha_vantage",
+            "yahoo_chart": "yahoo_finance",
+            "yfinance": "yahoo_finance",
         }
         return aliases.get(normalized, normalized)
 

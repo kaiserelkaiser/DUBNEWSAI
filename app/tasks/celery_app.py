@@ -29,9 +29,9 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
-    "aggregate-all-news-every-5-minutes": {
+    "aggregate-all-news-every-2-minutes": {
         "task": "aggregate_all_news_sources",
-        "schedule": crontab(minute="*/5"),
+        "schedule": crontab(minute="*/2"),
     },
     "cleanup-old-articles-daily": {
         "task": "cleanup_old_articles",

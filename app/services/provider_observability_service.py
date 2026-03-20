@@ -12,6 +12,21 @@ from app.models.sources import ArticleSource, DataProvider, MarketDataSource, Pr
 
 class ProviderObservabilityService:
     @staticmethod
+    def _infer_provider_type(provider_name: str, fetch_type: str) -> str:
+        registry_provider = provider_registry.get_provider(provider_name)
+        if registry_provider is not None:
+            return registry_provider.type.value
+
+        lowered = provider_name.lower()
+        if lowered in {"world_bank", "fred", "trading_economics"} or lowered.startswith("fred_"):
+            return ProviderType.ECONOMIC.value
+        if lowered in {"open_meteo", "dubai_pulse"}:
+            return ProviderType.DATASET.value
+        if fetch_type == "news_aggregation":
+            return ProviderType.NEWS.value
+        return ProviderType.MARKET.value
+
+    @staticmethod
     async def sync_registry_to_db(db: AsyncSession) -> dict[str, DataProvider]:
         result = await db.execute(select(DataProvider))
         existing = {provider.name: provider for provider in result.scalars().all()}
@@ -67,9 +82,10 @@ class ProviderObservabilityService:
             if provider is None:
                 provider = await db.scalar(select(DataProvider).where(DataProvider.name == provider_name))
             if provider is None:
-                provider_type = ProviderType.NEWS.value if fetch_type == "news_aggregation" else ProviderType.MARKET.value
+                provider_type = ProviderObservabilityService._infer_provider_type(provider_name, fetch_type)
                 provider = DataProvider(name=provider_name, type=provider_type)
                 db.add(provider)
+                await db.flush()
             providers[provider_name] = provider
 
             status = str(stats.get("status", "success"))
@@ -77,7 +93,7 @@ class ProviderObservabilityService:
             last_error = stats.get("last_error")
             db.add(
                 ProviderFetchLog(
-                    provider_id=provider.id,
+                    provider=provider,
                     query=query,
                     fetch_type=fetch_type,
                     status=status,

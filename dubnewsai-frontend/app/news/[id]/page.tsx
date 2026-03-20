@@ -25,7 +25,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 async function getArticle(id: string): Promise<NewsArticle | null> {
   try {
     const response = await fetch(`${API_URL}/news/${id}`, {
-      next: { revalidate: 300 }
+      next: { revalidate: 60 }
     })
 
     if (!response.ok) {
@@ -39,7 +39,31 @@ async function getArticle(id: string): Promise<NewsArticle | null> {
 }
 
 function normalizeArticleBody(article: NewsArticle) {
-  const description = (article.description || "").trim()
+  const compactLead = (value: string) => {
+    const normalized = value.trim().replace(/\s+/g, " ")
+    if (!normalized) {
+      return ""
+    }
+
+    const sentences = normalized
+      .split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/g)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean)
+
+    let summary = ""
+    for (const sentence of sentences.slice(0, 3)) {
+      const candidate = summary ? `${summary} ${sentence}` : sentence
+      if (summary && candidate.length > 380) {
+        break
+      }
+      summary = candidate
+    }
+
+    const fallback = summary || normalized.slice(0, 380)
+    return fallback.trim()
+  }
+
+  const description = compactLead(article.description || "")
   let content = (article.content || "").trim()
 
   if (description && content.toLowerCase().startsWith(description.toLowerCase())) {
@@ -72,7 +96,7 @@ function normalizeArticleBody(article: NewsArticle) {
 
   const filteredBlocks = blocks.filter((block) => block.toLowerCase() !== description.toLowerCase())
   return {
-    lead: description || filteredBlocks[0] || article.title,
+    lead: description || compactLead(filteredBlocks[0] || "") || article.title,
     blocks: filteredBlocks.length ? filteredBlocks : description ? [description] : []
   }
 }
