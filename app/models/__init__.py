@@ -14,6 +14,7 @@ from app.models.competitive_intelligence import (
 from app.models.market_data import CurrencyRate, EconomicIndicator, MarketData, WatchlistSymbol
 from app.models.news import NewsArticle, NewsTag, news_article_tags
 from app.models.notification import Notification
+from app.models.platform_feature import PlatformFeature
 from app.models.portfolio import (
     InvestmentRecommendation,
     Portfolio,
@@ -52,6 +53,7 @@ __all__ = [
     "NewsArticle",
     "NewsTag",
     "Notification",
+    "PlatformFeature",
     "PaymentHistory",
     "Portfolio",
     "PortfolioHolding",

@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Activity, AlertTriangle, BarChart3, BrainCircuit, Radar, ShieldAlert, Sparkles, Waves } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useMarketIntelligence } from "@/lib/hooks/useMarketData"
@@ -132,22 +133,29 @@ export default function AnalyticsPage() {
             <p className="story-kicker">Leading themes</p>
             <h2 className="mt-4 text-3xl font-semibold text-white">What is driving the graph</h2>
             <div className="mt-6 space-y-3">
-              {(mood?.drivers.leading_keywords || data?.trends || []).slice(0, 6).map((trend, index) => (
-                <motion.div
-                  key={trend.keyword}
-                  initial={{ opacity: 0, x: -12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.4, delay: index * 0.06 }}
-                  className="flex items-center justify-between rounded-[1.5rem] border border-white/10 bg-white/[0.03] px-4 py-4"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-white">{trend.keyword}</div>
-                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/38">Trend score {trend.trend_score}</div>
-                  </div>
-                  <div className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/62">{trend.count}x</div>
-                </motion.div>
-              ))}
+              {(mood?.drivers.leading_keywords || data?.trends || []).slice(0, 6).length ? (
+                (mood?.drivers.leading_keywords || data?.trends || []).slice(0, 6).map((trend, index) => (
+                  <motion.div
+                    key={trend.keyword}
+                    initial={{ opacity: 0, x: -12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.4, delay: index * 0.06 }}
+                    className="flex items-center justify-between rounded-[1.5rem] border border-white/10 bg-white/[0.03] px-4 py-4"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-white">{trend.keyword}</div>
+                      <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/38">Trend score {trend.trend_score}</div>
+                    </div>
+                    <div className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/62">{trend.count}x</div>
+                  </motion.div>
+                ))
+              ) : (
+                <EmptyStatePanel
+                  title="Leading themes will appear here."
+                  description="Once the analytics engine has enough article concentration and keyword momentum, this section highlights the terms shaping the market narrative."
+                />
+              )}
             </div>
           </article>
         </section>
@@ -157,17 +165,24 @@ export default function AnalyticsPage() {
             <p className="story-kicker">Category flow</p>
             <h2 className="mt-4 text-3xl font-semibold text-white">Which parts of the story graph are dominating</h2>
             <div className="mt-6 space-y-4">
-              {(data?.category_distribution || []).map((item) => (
-                <div key={item.category}>
-                  <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-white">{titleCase(item.category)}</span>
-                    <span className="text-white/52">{item.share_percent}%</span>
+              {(data?.category_distribution || []).length ? (
+                (data?.category_distribution || []).map((item) => (
+                  <div key={item.category}>
+                    <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium text-white">{titleCase(item.category)}</span>
+                      <span className="text-white/52">{item.share_percent}%</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-white/[0.05]">
+                      <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-amber-200" style={{ width: `${(item.share_percent / maxCategory) * 100}%` }} />
+                    </div>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-white/[0.05]">
-                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-amber-200" style={{ width: `${(item.share_percent / maxCategory) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <EmptyStatePanel
+                  title="Category dominance is still calibrating."
+                  description="As article categories accumulate, this section shows which parts of the market narrative are dominating the current cycle."
+                />
+              )}
             </div>
           </article>
 
@@ -281,17 +296,26 @@ export default function AnalyticsPage() {
             <p className="story-kicker">Opportunity map</p>
             <h2 className="mt-4 text-3xl font-semibold text-white">Setups the engine thinks deserve attention</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {(intelligence?.opportunities || []).slice(0, 6).map((item) => (
-                <div key={`${item.type}-${item.symbol}-${item.indicator}`} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-                  <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/40">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-200" />
-                    {item.confidence}
+              {(intelligence?.opportunities || []).slice(0, 6).length ? (
+                (intelligence?.opportunities || []).slice(0, 6).map((item) => (
+                  <div key={`${item.type}-${item.symbol}-${item.indicator}`} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+                    <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/40">
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-200" />
+                      {item.confidence}
+                    </div>
+                    <div className="mt-3 text-sm font-medium text-white">{item.symbol || item.type}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/38">{item.indicator}</div>
+                    <p className="mt-3 text-sm leading-7 text-white/58">{item.rationale}</p>
                   </div>
-                  <div className="mt-3 text-sm font-medium text-white">{item.symbol || item.type}</div>
-                  <div className="mt-1 text-xs uppercase tracking-[0.2em] text-white/38">{item.indicator}</div>
-                  <p className="mt-3 text-sm leading-7 text-white/58">{item.rationale}</p>
+                ))
+              ) : (
+                <div className="md:col-span-2">
+                  <EmptyStatePanel
+                    title="No opportunities are flagged yet."
+                    description="When the screening layer finds breakout, divergence, or momentum setups, they will appear here instead of leaving this section blank."
+                  />
                 </div>
-              ))}
+              )}
             </div>
           </article>
         </section>

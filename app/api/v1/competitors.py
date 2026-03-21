@@ -62,16 +62,6 @@ COMPETITOR_CATALOG = [
         "description": "Dubai market infrastructure player that reflects trading activity and local capital market depth.",
     },
 ]
-
-
-async def _ensure_seeded(db: AsyncSession) -> None:
-    existing = await competitor_service.list_competitors(db)
-    if existing:
-        return
-    for payload in COMPETITOR_CATALOG:
-        await competitor_service.create_competitor(db, **payload)
-
-
 @router.get("/", response_model=list[CompetitorResponse])
 async def list_competitors(
     db: AsyncSession = Depends(get_db),
@@ -79,7 +69,6 @@ async def list_competitors(
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[CompetitorResponse]:
     del current_user
-    await _ensure_seeded(db)
     competitors = await competitor_service.list_competitors(db)
     return [CompetitorResponse.model_validate(item) for item in competitors]
 
@@ -91,7 +80,6 @@ async def get_competitor_catalog(
     _rate_limit: None = Depends(check_tiered_rate_limit),
 ) -> list[dict]:
     del current_user
-    await _ensure_seeded(db)
     competitors = await competitor_service.list_competitors(db)
     tracked_names = {item.name for item in competitors}
     payload: list[dict] = []

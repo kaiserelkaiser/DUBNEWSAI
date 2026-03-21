@@ -7,6 +7,8 @@ import { BarChart3, BellRing, Briefcase, Plus, ShieldCheck, Target } from "lucid
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
 import { ActionStatus } from "@/components/shared/ActionStatus"
+import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
+import { FeatureGate } from "@/components/shared/FeatureGate"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useInvestmentScore, usePortfolioAnalytics, usePortfolioAssetCatalog, usePortfolios, useWatchlists } from "@/lib/hooks/usePortfolio"
@@ -185,6 +187,11 @@ export default function PortfoliosPage() {
 
   return (
     <AuthGuard>
+      <FeatureGate
+        featureKey="portfolios"
+        title="Investor Suite is hidden right now."
+        description="An admin has temporarily removed the investor workspace from the live platform. Re-enable the feature from admin controls to restore portfolio, watchlist, and scoring screens."
+      >
       <div className="space-y-8">
         <PremiumPageHero
           eyebrow="Investor intelligence"
@@ -267,30 +274,37 @@ export default function PortfoliosPage() {
             />
 
             <div className="mt-8 space-y-3">
-              {portfolios.map((portfolio) => (
-                <button
-                  key={portfolio.id}
-                  onClick={() => setSelectedPortfolioId(portfolio.id)}
-                  className={`w-full rounded-[1.5rem] border px-4 py-4 text-left transition ${
-                    selectedPortfolio?.id === portfolio.id
-                      ? "border-cyan-300/30 bg-cyan-300/[0.06]"
-                      : "border-white/10 bg-white/[0.03]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-white">{portfolio.name}</div>
-                      <div className="mt-1 text-xs text-white/44">{portfolio.description}</div>
-                    </div>
-                    <div className="text-right text-sm text-white/68">
-                      <div>{formatCompactCurrency(portfolio.total_value_aed, "AED")}</div>
-                      <div className={portfolio.total_return_percent >= 0 ? "text-emerald-300" : "text-rose-300"}>
-                        {portfolio.total_return_percent.toFixed(2)}%
+              {portfolios.length ? (
+                portfolios.map((portfolio) => (
+                  <button
+                    key={portfolio.id}
+                    onClick={() => setSelectedPortfolioId(portfolio.id)}
+                    className={`w-full rounded-[1.5rem] border px-4 py-4 text-left transition ${
+                      selectedPortfolio?.id === portfolio.id
+                        ? "border-cyan-300/30 bg-cyan-300/[0.06]"
+                        : "border-white/10 bg-white/[0.03]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-white">{portfolio.name}</div>
+                        <div className="mt-1 text-xs text-white/44">{portfolio.description}</div>
+                      </div>
+                      <div className="text-right text-sm text-white/68">
+                        <div>{formatCompactCurrency(portfolio.total_value_aed, "AED")}</div>
+                        <div className={portfolio.total_return_percent >= 0 ? "text-emerald-300" : "text-rose-300"}>
+                          {portfolio.total_return_percent.toFixed(2)}%
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))
+              ) : (
+                <EmptyStatePanel
+                  title="No portfolios yet."
+                  description="Create your first portfolio to unlock trade intake, analytics, and watchlist tracking from this workspace."
+                />
+              )}
             </div>
           </article>
 
@@ -414,12 +428,16 @@ export default function PortfoliosPage() {
                   <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
                     <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Asset allocation</div>
                     <div className="mt-4 space-y-3">
-                      {Object.entries(analytics.allocation.by_asset).slice(0, 6).map(([symbol, item]) => (
-                        <div key={symbol} className="flex items-center justify-between gap-4">
-                          <div className="text-sm text-white">{symbol}</div>
-                          <div className="text-sm text-white/62">{item.percent.toFixed(2)}%</div>
-                        </div>
-                      ))}
+                      {Object.entries(analytics.allocation.by_asset).length ? (
+                        Object.entries(analytics.allocation.by_asset).slice(0, 6).map(([symbol, item]) => (
+                          <div key={symbol} className="flex items-center justify-between gap-4">
+                            <div className="text-sm text-white">{symbol}</div>
+                            <div className="text-sm text-white/62">{item.percent.toFixed(2)}%</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-white/48">No holdings are allocated yet.</div>
+                      )}
                     </div>
                   </div>
 
@@ -536,6 +554,8 @@ export default function PortfoliosPage() {
 
             <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
               <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Add watch item</div>
+              {watchlists.length ? (
+                <>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <Field label="Destination watchlist">
                   <select
@@ -598,6 +618,15 @@ export default function PortfoliosPage() {
                 error={addWatchlistItem.error}
                 successMessage="Watchlist item added."
               />
+                </>
+              ) : (
+                <div className="mt-4">
+                  <EmptyStatePanel
+                    title="Create a watchlist before adding names."
+                    description="Once a watchlist exists, this intake panel will let you push symbols into a monitored opportunity queue."
+                  />
+                </div>
+              )}
             </div>
           </article>
 
@@ -605,30 +634,42 @@ export default function PortfoliosPage() {
             <p className="story-kicker">Current watchlists</p>
             <h2 className="mt-4 text-3xl font-semibold text-white">Opportunity radar and monitoring queues</h2>
             <div className="mt-6 space-y-4">
-              {watchlists.map((watchlist) => (
-                <div key={watchlist.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-white">{watchlist.name}</div>
-                      <div className="mt-1 text-xs text-white/44">{watchlist.description}</div>
+              {watchlists.length ? (
+                watchlists.map((watchlist) => (
+                  <div key={watchlist.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-white">{watchlist.name}</div>
+                        <div className="mt-1 text-xs text-white/44">{watchlist.description}</div>
+                      </div>
+                      <div className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/56">
+                        {watchlist.items.length} items
+                      </div>
                     </div>
-                    <div className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/56">
-                      {watchlist.items.length} items
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {watchlist.items.length ? (
+                        watchlist.items.slice(0, 6).map((item) => (
+                          <span key={item.id} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60">
+                            {item.symbol}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-white/48">No symbols added yet.</span>
+                      )}
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {watchlist.items.slice(0, 6).map((item) => (
-                      <span key={item.id} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60">
-                        {item.symbol}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <EmptyStatePanel
+                  title="No watchlists yet."
+                  description="Create a watchlist to track entry levels, sell targets, and research notes before adding a live position."
+                />
+              )}
             </div>
           </article>
         </section>
       </div>
+      </FeatureGate>
     </AuthGuard>
   )
 }
@@ -671,12 +712,16 @@ function PerformerPanel({
     <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
       <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">{title}</div>
       <div className="mt-4 space-y-3">
-        {items.map((item) => (
-          <div key={`${title}-${item.symbol}`} className="flex items-center justify-between gap-4">
-            <div className="text-sm text-white">{item.symbol}</div>
-            <div className="text-sm text-white/62">{item.return_percent.toFixed(2)}%</div>
-          </div>
-        ))}
+        {items.length ? (
+          items.map((item) => (
+            <div key={`${title}-${item.symbol}`} className="flex items-center justify-between gap-4">
+              <div className="text-sm text-white">{item.symbol}</div>
+              <div className="text-sm text-white/62">{item.return_percent.toFixed(2)}%</div>
+            </div>
+          ))
+        ) : (
+          <div className="text-sm text-white/48">No ranked holdings yet.</div>
+        )}
       </div>
     </div>
   )
@@ -698,11 +743,15 @@ function BadgePanel({
         {title}
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {items.map((item) => (
-          <span key={item} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60">
-            {item}
-          </span>
-        ))}
+        {items.length ? (
+          items.map((item) => (
+            <span key={item} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60">
+              {item}
+            </span>
+          ))
+        ) : (
+          <span className="text-sm text-white/48">No items yet.</span>
+        )}
       </div>
     </div>
   )

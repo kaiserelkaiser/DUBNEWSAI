@@ -4,28 +4,32 @@ import { BarChart3, BellRing, Briefcase, Building2, LayoutDashboard, LineChart, 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { usePlatformFeatures } from "@/lib/hooks/useEnterprise"
 import { cn } from "@/lib/utils/cn"
 import { useAuthStore } from "@/lib/store/authStore"
 
 const baseItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/news", label: "News Feed", icon: Newspaper },
-  { href: "/market", label: "Market", icon: LineChart },
-  { href: "/portfolios", label: "Investor Suite", icon: Briefcase },
-  { href: "/competitors", label: "Competitors", icon: Swords },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/executive", label: "Executive", icon: Waves },
-  { href: "/teams", label: "Teams", icon: Users2 },
-  { href: "/alerts", label: "Alerts", icon: BellRing },
-  { href: "/settings", label: "Settings", icon: Settings }
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, featureKey: "dashboard" },
+  { href: "/news", label: "News Feed", icon: Newspaper, featureKey: "news" },
+  { href: "/market", label: "Market", icon: LineChart, featureKey: "market" },
+  { href: "/portfolios", label: "Investor Suite", icon: Briefcase, featureKey: "portfolios" },
+  { href: "/competitors", label: "Competitors", icon: Swords, featureKey: "competitors" },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, featureKey: "analytics" },
+  { href: "/executive", label: "Executive", icon: Waves, featureKey: "executive" },
+  { href: "/teams", label: "Teams", icon: Users2, featureKey: "teams" },
+  { href: "/alerts", label: "Alerts", icon: BellRing, featureKey: "alerts" },
+  { href: "/settings", label: "Settings", icon: Settings, featureKey: "settings" }
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const user = useAuthStore((state) => state.user)
-  const items = user?.role === "admin"
-    ? [...baseItems, { href: "/admin/providers", label: "Providers", icon: Shield }]
+  const { data: featureList } = usePlatformFeatures()
+  const visibleFeatures = new Map(featureList?.map((feature) => [feature.feature_key, feature.is_visible]) || [])
+  const items = (user?.role === "admin"
+    ? [...baseItems, { href: "/admin/providers", label: "Providers", icon: Shield, featureKey: "admin_providers" }]
     : baseItems
+  ).filter((item) => visibleFeatures.get(item.featureKey) ?? true)
 
   return (
     <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-[18.5rem] overflow-x-hidden lg:block">

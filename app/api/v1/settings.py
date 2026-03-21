@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rate_limit import check_tiered_rate_limit
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_user_optional
 from app.models.api_access import APIKey
 from app.models.user import User
 from app.models.white_label import WhiteLabelConfig
@@ -17,11 +17,23 @@ from app.schemas.enterprise import (
     APIKeyCreateRequest,
     APIKeyCreatedResponse,
     APIKeyResponse,
+    PlatformFeatureResponse,
     WhiteLabelConfigRequest,
     WhiteLabelConfigResponse,
 )
+from app.services.platform_feature_service import platform_feature_service
 
 router = APIRouter(prefix="/settings", tags=["settings"])
+
+
+@router.get("/platform-features", response_model=list[PlatformFeatureResponse])
+async def list_platform_features(
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> list[PlatformFeatureResponse]:
+    del current_user
+    features = await platform_feature_service.list_features(db)
+    return [PlatformFeatureResponse.model_validate(item) for item in features]
 
 
 @router.get("/api-keys", response_model=list[APIKeyResponse])

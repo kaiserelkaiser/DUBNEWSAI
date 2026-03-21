@@ -2,13 +2,17 @@
 
 import { AlertCircle, CheckCircle2, RefreshCw, ShieldAlert } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/hooks/useAuth"
+import { useAdminPlatformFeatures } from "@/lib/hooks/useEnterprise"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
+import type { PlatformFeature } from "@/types"
 
 interface ProviderSummary {
   total_providers: number
@@ -43,11 +47,13 @@ interface ProviderRow {
 
 export default function ProvidersAdminPage() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [providers, setProviders] = useState<ProviderRow[]>([])
   const [summary, setSummary] = useState<ProviderSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const isAdmin = user?.role === "admin"
+  const { data: platformFeatures = [] } = useAdminPlatformFeatures()
 
   const fetchData = async (silent = false) => {
     if (!silent) {
@@ -89,6 +95,19 @@ export default function ProvidersAdminPage() {
     await apiClient.post(`/admin/providers/${providerId}/reset-circuit`)
     await fetchData()
   }
+
+  const updateFeatureVisibility = useMutation({
+    mutationFn: async ({ featureKey, isVisible }: { featureKey: string; isVisible: boolean }) => {
+      const { data } = await apiClient.put<PlatformFeature>(`/admin/platform-features/${featureKey}`, {
+        is_visible: isVisible
+      })
+      return data
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "platform-features"] })
+      await queryClient.invalidateQueries({ queryKey: ["platform-features"] })
+    }
+  })
 
   if (loading) {
     return (
@@ -193,85 +212,138 @@ export default function ProvidersAdminPage() {
           </section>
         ) : null}
 
-        <section id="providers-table" className="panel-premium overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/10 text-sm">
-              <thead className="bg-white/[0.03] text-left text-[10px] uppercase tracking-[0.28em] text-white/42">
-                <tr>
-                  <th className="px-4 py-4">Provider</th>
-                  <th className="px-4 py-4">Type</th>
-                  <th className="px-4 py-4">Circuit</th>
-                  <th className="px-4 py-4">Health</th>
-                  <th className="px-4 py-4">Success</th>
-                  <th className="px-4 py-4">Calls</th>
-                  <th className="px-4 py-4">Last success</th>
-                  <th className="px-4 py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/6">
-                {providers.map((provider) => {
-                  const liveHealth = Math.round(provider.live_health_score)
-                  const circuitClass =
-                    provider.live_circuit_state === "closed"
-                      ? "text-emerald-300"
-                      : provider.live_circuit_state === "half_open"
-                        ? "text-amber-200"
-                        : "text-red-300"
+        <section className="panel-premium p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="story-kicker">Platform visibility</p>
+              <h2 className="mt-3 text-3xl font-semibold text-white">Show or hide live platform sections</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-white/56">
+                Toggle any major workspace area without removing its backend implementation. Hidden features disappear from navigation and show a graceful unavailable state when accessed directly.
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {platformFeatures.map((feature) => (
+              <article key={feature.feature_key} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-white">{feature.label}</div>
+                    <div className="mt-1 text-[10px] uppercase tracking-[0.24em] text-white/38">{titleCase(feature.category)}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateFeatureVisibility.mutate({
+                        featureKey: feature.feature_key,
+                        isVisible: !feature.is_visible
+                      })
+                    }
+                    className={`rounded-full border px-3 py-2 text-xs transition ${
+                      feature.is_visible
+                        ? "border-emerald-400/30 text-emerald-200 hover:border-emerald-300/50"
+                        : "border-white/10 text-white/62 hover:text-white"
+                    }`}
+                    disabled={updateFeatureVisibility.isPending}
+                  >
+                    {feature.is_visible ? "Visible" : "Hidden"}
+                  </button>
+                </div>
+                <p className="mt-4 text-sm leading-7 text-white/56">
+                  {feature.description || "Feature visibility can be managed here."}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-                  return (
-                    <tr key={provider.id}>
-                      <td className="px-4 py-4 align-top">
-                        <div className="font-semibold text-white">{provider.name}</div>
-                        <div className="mt-1 text-xs text-white/40">Priority {provider.priority}</div>
-                        {provider.base_url ? <div className="mt-1 text-xs text-white/32">{provider.base_url}</div> : null}
-                      </td>
-                      <td className="px-4 py-4 align-top text-white/64">{titleCase(provider.type)}</td>
-                      <td className={`px-4 py-4 align-top font-medium ${circuitClass}`}>{titleCase(provider.live_circuit_state.replace("_", " "))}</td>
-                      <td className="px-4 py-4 align-top">
-                        <div className="w-32 rounded-full bg-white/10">
-                          <div
-                            className={`h-2 rounded-full ${liveHealth >= 70 ? "bg-emerald-400" : liveHealth >= 40 ? "bg-amber-300" : "bg-red-400"}`}
-                            style={{ width: `${Math.max(0, Math.min(100, liveHealth))}%` }}
-                          />
-                        </div>
-                        <div className="mt-2 text-xs text-white/40">{liveHealth}%</div>
-                      </td>
-                      <td className="px-4 py-4 align-top text-white/64">{provider.success_rate.toFixed(1)}%</td>
-                      <td className="px-4 py-4 align-top text-white/64">
-                        <div>{provider.total_calls}</div>
-                        <div className="mt-1 text-xs text-white/40">
-                          {provider.successful_calls} ok / {provider.failed_calls} fail
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-top text-white/64">
-                        {provider.last_success_at ? formatDateTime(provider.last_success_at) : "Never"}
-                      </td>
-                      <td className="px-4 py-4 align-top">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void toggleProvider(provider.id)}
-                            className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/78 transition hover:text-white"
-                          >
-                            {provider.is_enabled ? "Disable" : "Enable"}
-                          </button>
-                          {provider.live_circuit_state === "open" ? (
+        <section id="providers-table" className="panel-premium overflow-hidden">
+          {providers.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/10 text-sm">
+                <thead className="bg-white/[0.03] text-left text-[10px] uppercase tracking-[0.28em] text-white/42">
+                  <tr>
+                    <th className="px-4 py-4">Provider</th>
+                    <th className="px-4 py-4">Type</th>
+                    <th className="px-4 py-4">Circuit</th>
+                    <th className="px-4 py-4">Health</th>
+                    <th className="px-4 py-4">Success</th>
+                    <th className="px-4 py-4">Calls</th>
+                    <th className="px-4 py-4">Last success</th>
+                    <th className="px-4 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/6">
+                  {providers.map((provider) => {
+                    const liveHealth = Math.round(provider.live_health_score)
+                    const circuitClass =
+                      provider.live_circuit_state === "closed"
+                        ? "text-emerald-300"
+                        : provider.live_circuit_state === "half_open"
+                          ? "text-amber-200"
+                          : "text-red-300"
+
+                    return (
+                      <tr key={provider.id}>
+                        <td className="px-4 py-4 align-top">
+                          <div className="font-semibold text-white">{provider.name}</div>
+                          <div className="mt-1 text-xs text-white/40">Priority {provider.priority}</div>
+                          {provider.base_url ? <div className="mt-1 text-xs text-white/32">{provider.base_url}</div> : null}
+                        </td>
+                        <td className="px-4 py-4 align-top text-white/64">{titleCase(provider.type)}</td>
+                        <td className={`px-4 py-4 align-top font-medium ${circuitClass}`}>{titleCase(provider.live_circuit_state.replace("_", " "))}</td>
+                        <td className="px-4 py-4 align-top">
+                          <div className="w-32 rounded-full bg-white/10">
+                            <div
+                              className={`h-2 rounded-full ${liveHealth >= 70 ? "bg-emerald-400" : liveHealth >= 40 ? "bg-amber-300" : "bg-red-400"}`}
+                              style={{ width: `${Math.max(0, Math.min(100, liveHealth))}%` }}
+                            />
+                          </div>
+                          <div className="mt-2 text-xs text-white/40">{liveHealth}%</div>
+                        </td>
+                        <td className="px-4 py-4 align-top text-white/64">{provider.success_rate.toFixed(1)}%</td>
+                        <td className="px-4 py-4 align-top text-white/64">
+                          <div>{provider.total_calls}</div>
+                          <div className="mt-1 text-xs text-white/40">
+                            {provider.successful_calls} ok / {provider.failed_calls} fail
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 align-top text-white/64">
+                          {provider.last_success_at ? formatDateTime(provider.last_success_at) : "Never"}
+                        </td>
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
-                              onClick={() => void resetCircuit(provider.id)}
-                              className="rounded-full border border-red-500/30 px-3 py-2 text-xs text-red-300 transition hover:border-red-400/50 hover:text-red-200"
+                              onClick={() => void toggleProvider(provider.id)}
+                              className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/78 transition hover:text-white"
                             >
-                              Reset Circuit
+                              {provider.is_enabled ? "Disable" : "Enable"}
                             </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                            {provider.live_circuit_state === "open" ? (
+                              <button
+                                type="button"
+                                onClick={() => void resetCircuit(provider.id)}
+                                className="rounded-full border border-red-500/30 px-3 py-2 text-xs text-red-300 transition hover:border-red-400/50 hover:text-red-200"
+                              >
+                                Reset Circuit
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-6">
+              <EmptyStatePanel
+                title="Provider controls will appear here."
+                description="Once providers are configured, this table becomes the live operational control surface for circuit state, health, and throughput."
+              />
+            </div>
+          )}
         </section>
       </div>
     </AuthGuard>

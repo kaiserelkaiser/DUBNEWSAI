@@ -155,3 +155,20 @@ class APIKeyCreatedResponse(APIKeyResponse):
 class WebhookRegisterRequest(BaseModel):
     webhook_url: str
     events: list[str]
+
+
+class PlatformFeatureResponse(BaseModel):
+    id: int
+    feature_key: str
+    label: str
+    description: str | None = None
+    category: str
+    is_visible: bool
+    sort_order: int
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlatformFeatureUpdateRequest(BaseModel):
+    is_visible: bool

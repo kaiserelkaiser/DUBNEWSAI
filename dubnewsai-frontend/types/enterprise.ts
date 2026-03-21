@@ -279,3 +279,14 @@ export interface WhiteLabelConfig {
   created_at: string
   updated_at: string
 }
+
+export interface PlatformFeature {
+  id: number
+  feature_key: string
+  label: string
+  description?: string | null
+  category: string
+  is_visible: boolean
+  sort_order: number
+  updated_at: string
+}

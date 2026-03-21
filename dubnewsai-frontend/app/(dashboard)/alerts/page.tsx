@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { BellRing, ShieldAlert, Siren, Zap } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
@@ -248,17 +249,24 @@ export default function AlertsPage() {
               <p className="story-kicker">Strategy templates</p>
               <h2 className="mt-3 text-3xl font-semibold text-white">Fast-start playbooks</h2>
               <div className="mt-6 space-y-3">
-                {(intelligence?.templates || []).map((template) => (
-                  <div key={template.name} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-semibold text-white">{template.name}</div>
-                      <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/52">
-                        {titleCase(template.frequency)}
-                      </span>
+                {(intelligence?.templates || []).length ? (
+                  (intelligence?.templates || []).map((template) => (
+                    <div key={template.name} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm font-semibold text-white">{template.name}</div>
+                        <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/52">
+                          {titleCase(template.frequency)}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-white/56">{template.description}</p>
                     </div>
-                    <p className="mt-3 text-sm leading-7 text-white/56">{template.description}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <EmptyStatePanel
+                    title="Alert templates will appear here."
+                    description="As the alert engine surfaces recommended monitoring playbooks, they will show up in this section instead of leaving dead space."
+                  />
+                )}
               </div>
             </div>
 
@@ -305,47 +313,56 @@ export default function AlertsPage() {
             </div>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
-              {alerts?.map((alert) => (
-                <article key={alert.id} className="panel-premium space-y-4 p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{alert.name}</h3>
-                      <p className="mt-1 text-sm text-white/48">
-                        {titleCase(alert.alert_type)} | {titleCase(alert.status)}
-                      </p>
+              {alerts?.length ? (
+                alerts.map((alert) => (
+                  <article key={alert.id} className="panel-premium space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">{alert.name}</h3>
+                        <p className="mt-1 text-sm text-white/48">
+                          {titleCase(alert.alert_type)} | {titleCase(alert.status)}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${alert.is_active ? "bg-emerald-500/10 text-emerald-300" : "bg-white/10 text-white/62"}`}>
+                        {alert.is_active ? "Active" : "Paused"}
+                      </span>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${alert.is_active ? "bg-emerald-500/10 text-emerald-300" : "bg-white/10 text-white/62"}`}>
-                      {alert.is_active ? "Active" : "Paused"}
-                    </span>
-                  </div>
 
-                  <div className="grid gap-3 text-sm text-white/64 md:grid-cols-2">
-                    <div>Symbol: {alert.symbol || "N/A"}</div>
-                    <div>Threshold: {alert.threshold_value ?? "N/A"}</div>
-                    <div>Frequency: {titleCase(alert.frequency)}</div>
-                    <div>Triggers: {alert.trigger_count}</div>
-                    <div>Last fired: {alert.last_triggered_at ? formatDateTime(alert.last_triggered_at) : "Never"}</div>
-                    <div>Created: {formatDateTime(alert.created_at)}</div>
-                  </div>
+                    <div className="grid gap-3 text-sm text-white/64 md:grid-cols-2">
+                      <div>Symbol: {alert.symbol || "N/A"}</div>
+                      <div>Threshold: {alert.threshold_value ?? "N/A"}</div>
+                      <div>Frequency: {titleCase(alert.frequency)}</div>
+                      <div>Triggers: {alert.trigger_count}</div>
+                      <div>Last fired: {alert.last_triggered_at ? formatDateTime(alert.last_triggered_at) : "Never"}</div>
+                      <div>Created: {formatDateTime(alert.created_at)}</div>
+                    </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleAlert(alert.id)}
-                      className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/78 transition hover:text-white"
-                    >
-                      {alert.is_active ? "Pause" : "Activate"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteAlert(alert.id)}
-                      className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300 transition hover:border-red-400/50 hover:text-red-200"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleAlert(alert.id)}
+                        className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/78 transition hover:text-white"
+                      >
+                        {alert.is_active ? "Pause" : "Activate"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteAlert(alert.id)}
+                        className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300 transition hover:border-red-400/50 hover:text-red-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="lg:col-span-2">
+                  <EmptyStatePanel
+                    title="No live alert rules yet."
+                    description="Create your first rule to turn this area into the active monitoring layer for price, narrative, sentiment, and trend events."
+                  />
+                </div>
+              )}
             </div>
           )}
         </section>

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import { DashboardFeatureShell } from "@/components/layout/DashboardFeatureShell"
 import { Navbar } from "@/components/layout/Navbar"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { WebSocketProvider } from "@/lib/hooks/useWebSocket"
@@ -18,7 +19,9 @@ export default function DashboardLayout({
         <div className="relative flex min-h-[calc(100vh-5rem)] min-w-0">
           <Sidebar />
           <main className="min-w-0 flex-1 overflow-x-hidden lg:ml-[18.5rem]">
-            <div className="mx-auto min-w-0 max-w-[1600px] px-4 pb-10 pt-6 sm:px-6 lg:px-8">{children}</div>
+            <div className="mx-auto min-w-0 max-w-[1600px] px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+              <DashboardFeatureShell>{children}</DashboardFeatureShell>
+            </div>
           </main>
         </div>
       </div>

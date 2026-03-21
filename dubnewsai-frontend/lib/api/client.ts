@@ -4,21 +4,28 @@ import { normalizeApiBaseUrl } from "@/lib/config/api"
 import { useAuthStore } from "@/lib/store/authStore"
 
 function getApiUrl() {
+  if (typeof window !== "undefined") {
+    return "/api/backend"
+  }
+
   return normalizeApiBaseUrl()
 }
 
 export const apiClient = axios.create({
-  baseURL: getApiUrl(),
   headers: {
     "Content-Type": "application/json"
   }
 })
 
 const refreshClient = axios.create({
-  baseURL: getApiUrl(),
   headers: {
     "Content-Type": "application/json"
   }
+})
+
+refreshClient.interceptors.request.use((config) => {
+  config.baseURL = getApiUrl()
+  return config
 })
 
 let refreshPromise: Promise<string | null> | null = null

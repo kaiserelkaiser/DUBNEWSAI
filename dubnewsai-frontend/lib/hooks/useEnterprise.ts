@@ -11,6 +11,7 @@ import type {
   CompetitorAnalysis,
   ExecutiveDashboard,
   MarketTrendPrediction,
+  PlatformFeature,
   PredictionUniverseResponse,
   PricePrediction,
   PropertyTrendPrediction,
@@ -27,6 +28,32 @@ export function useCompetitors() {
       const { data } = await apiClient.get<Competitor[]>("/competitors")
       return data
     }
+  })
+}
+
+export function usePlatformFeatures() {
+  return useQuery<PlatformFeature[]>({
+    queryKey: ["platform-features"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<PlatformFeature[]>("/settings/platform-features")
+      return data
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false
+  })
+}
+
+export function useAdminPlatformFeatures() {
+  const { accessToken, hydrated, user } = useAuthStore()
+
+  return useQuery<PlatformFeature[]>({
+    queryKey: ["admin", "platform-features"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<PlatformFeature[]>("/admin/platform-features")
+      return data
+    },
+    enabled: hydrated && Boolean(accessToken) && user?.role === "admin",
+    retry: false
   })
 }
 
