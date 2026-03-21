@@ -38,8 +38,8 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-20 hidden h-[calc(100vh-5rem)] w-[18.5rem] overflow-x-hidden lg:block">
-      <div className="m-4 flex h-[calc(100%-2rem)] min-h-0 flex-col rounded-[2rem] border border-slate-200/70 bg-white/80 p-4 shadow-[0_32px_120px_-60px_rgba(15,23,42,0.18)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#080a0e]/88 dark:shadow-[0_32px_120px_-60px_rgba(0,0,0,0.95)]">
-        <div className="rounded-[1.6rem] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(241,245,249,0.78))] p-4 dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
+      <div className="m-4 flex h-[calc(100%-2rem)] min-h-0 flex-col rounded-[2rem] border border-slate-200/70 bg-white/80 p-4 shadow-[0_32px_120px_-60px_rgba(15,23,42,0.18)] backdrop-blur-2xl dark:border-white/8 dark:bg-[#07090d]/94 dark:shadow-[0_32px_120px_-60px_rgba(0,0,0,0.98)]">
+        <div className="rounded-[1.6rem] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(241,245,249,0.78))] p-4 dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))]">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Building2 className="h-4 w-4 text-amber-300" />
             Dubai Intelligence Desk
@@ -61,17 +61,24 @@ export function Sidebar() {
                 className={cn(
                   "group flex items-center gap-3 rounded-[1.2rem] px-4 py-3 text-sm font-medium transition-all duration-300",
                   active
-                    ? "bg-white text-slate-950 shadow-[0_18px_40px_-24px_rgba(255,255,255,0.85)]"
+                    ? "bg-white text-slate-950 shadow-[0_18px_40px_-24px_rgba(255,255,255,0.85)] dark:bg-white/[0.08] dark:text-white dark:shadow-[0_22px_40px_-24px_rgba(0,0,0,0.72)]"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/62 dark:hover:bg-white/[0.05] dark:hover:text-white"
                 )}
               >
                 <span
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-full border transition-all",
-                    active ? "border-slate-200 bg-slate-100" : "border-slate-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]"
+                    active
+                      ? "border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/[0.08]"
+                      : "border-slate-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", active ? "text-slate-950" : "text-slate-500 group-hover:text-slate-950 dark:text-white/60 dark:group-hover:text-white")} />
+                  <Icon
+                    className={cn(
+                      "h-4 w-4",
+                      active ? "text-slate-950 dark:text-white" : "text-slate-500 group-hover:text-slate-950 dark:text-white/60 dark:group-hover:text-white"
+                    )}
+                  />
                 </span>
                 <span className="flex-1">{item.label}</span>
               </Link>
@@ -79,7 +86,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="mt-auto rounded-[1.6rem] border border-cyan-300/18 bg-cyan-300/[0.08] p-4 dark:border-cyan-300/12 dark:bg-cyan-300/[0.04]">
+        <div className="mt-auto rounded-[1.6rem] border border-cyan-300/18 bg-cyan-300/[0.08] p-4 dark:border-cyan-300/18 dark:bg-cyan-300/[0.06]">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-100/60">
             <Sparkles className="h-3.5 w-3.5" />
             Live stack

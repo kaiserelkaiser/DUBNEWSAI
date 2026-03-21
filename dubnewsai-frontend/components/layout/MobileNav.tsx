@@ -19,7 +19,7 @@ export function MobileNav() {
     <div className="lg:hidden">
       <button
         onClick={() => setIsOpen((value) => !value)}
-        className="rounded-full border border-white/10 bg-white/[0.05] p-2.5 text-white/78"
+        className="rounded-full border border-slate-200/70 bg-white/75 p-2.5 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-white/78"
       >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
@@ -37,14 +37,14 @@ export function MobileNav() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 240 }}
-              className="ml-auto flex h-full w-[86vw] max-w-sm flex-col border-l border-white/10 bg-[#07090d] p-6"
+              className="ml-auto flex h-full w-[86vw] max-w-sm flex-col border-l border-white/10 bg-[#07090d] p-6 shadow-[0_0_60px_rgba(0,0,0,0.5)]"
             >
               <div className="mb-10 flex items-center justify-between">
                 <div>
                   <h2 className="font-display text-2xl font-bold text-white">DUBNEWSAI</h2>
                   <p className="mt-1 text-[10px] uppercase tracking-[0.32em] text-white/42">Navigation</p>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="rounded-full border border-white/10 p-2 text-white/70">
+                <button onClick={() => setIsOpen(false)} className="rounded-full border border-white/10 bg-white/[0.03] p-2 text-white/70">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -91,12 +91,12 @@ function MobileNavLink({
     <Link
       href={href}
       onClick={onClick}
-      className={cn(
-        "block rounded-[1.4rem] border px-4 py-4 text-base font-medium transition-colors",
-        pathname === href
-          ? "border-white bg-white text-slate-950"
-          : "border-white/10 bg-white/[0.03] text-white/74 hover:text-white"
-      )}
+        className={cn(
+          "block rounded-[1.4rem] border px-4 py-4 text-base font-medium transition-colors",
+          pathname === href
+            ? "border-white/12 bg-white/[0.12] text-white"
+            : "border-white/10 bg-white/[0.03] text-white/74 hover:text-white"
+        )}
     >
       {children}
     </Link>

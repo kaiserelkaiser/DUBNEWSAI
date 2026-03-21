@@ -13,12 +13,12 @@ export function Navbar() {
   const { isAuthenticated, logout, user } = useAuth()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-[#050506]/80">
+    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl dark:border-white/8 dark:bg-[#050506]/84">
       <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <MobileNav />
           <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white text-sm font-black text-slate-950 shadow-[0_12px_40px_-18px_rgba(255,255,255,0.6)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/70 bg-white text-sm font-black text-slate-950 shadow-[0_12px_40px_-18px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-white/[0.08] dark:text-white dark:shadow-[0_12px_40px_-18px_rgba(0,0,0,0.75)]">
               DN
             </div>
             <div>
