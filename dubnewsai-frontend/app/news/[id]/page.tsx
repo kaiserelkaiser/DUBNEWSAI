@@ -220,6 +220,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   {titleCase(article.category)}
                 </span>
                 <SentimentBadge sentiment={article.sentiment} score={article.sentiment_score} />
+                {article.enrichment_status === "limited" ? (
+                  <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-amber-100/80">
+                    Recovery brief
+                  </span>
+                ) : null}
                 {article.primary_provider ? (
                   <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-cyan-100/80">
                     {titleCase(article.primary_provider)}
@@ -284,6 +289,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
 
             <div className="mt-8 space-y-6">
+              {article.enrichment_status === "limited" ? (
+                <div className="rounded-[1.4rem] border border-amber-300/15 bg-amber-300/10 p-4 text-sm leading-7 text-amber-50/85">
+                  The original publisher is blocking full-text extraction right now, so this page is showing the DUBNEWSAI recovered long-form brief instead of a broken truncated source snippet.
+                </div>
+              ) : null}
               {contentBlocks.length ? (
                 contentBlocks.map((block, index) => (
                   <p key={`${article.id}-block-${index}`} className="reading-body">

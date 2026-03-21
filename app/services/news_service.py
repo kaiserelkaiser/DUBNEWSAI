@@ -1,4 +1,5 @@
 import hashlib
+import hashlib
 import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -184,6 +185,56 @@ class NewsService:
     @classmethod
     def _normalize_article_text(cls, description: str | None, content: str | None) -> tuple[str | None, str | None]:
         return cls._remove_description_overlap(description, content)
+
+    @classmethod
+    def _build_recovery_brief(cls, article: NewsArticle) -> str | None:
+        title = cls._normalize_text_blob(article.title) or "This story"
+        description = cls._strip_article_boilerplate(article.description)
+        snippet = cls._strip_article_boilerplate(article.content)
+
+        opening = description or snippet
+        if opening and title.lower() not in opening.lower():
+            lead_paragraph = f"{title}. {opening}"
+        else:
+            lead_paragraph = opening or title
+
+        keyword_list = [keyword.replace("-", " ") for keyword in (article.keywords or []) if keyword]
+        entity_values = []
+        for values in (article.entities or {}).values():
+            entity_values.extend(value for value in values if value)
+        entity_values = list(dict.fromkeys(entity_values))
+
+        context_parts: list[str] = []
+        if article.source_name:
+            context_parts.append(f"The original source is {article.source_name}")
+        if article.primary_provider:
+            context_parts.append(f"the story reached DUBNEWSAI through {article.primary_provider.upper()}")
+        if article.published_at:
+            published_at = article.published_at
+            if published_at.tzinfo is None:
+                published_at = published_at.replace(tzinfo=timezone.utc)
+            context_parts.append(f"and it was published on {published_at.strftime('%B %d, %Y')}")
+        context_sentence = " ".join(context_parts).strip()
+        if context_sentence:
+            context_sentence = context_sentence.rstrip(".") + "."
+
+        angle_parts: list[str] = []
+        if keyword_list:
+            angle_parts.append("Key themes in the available coverage include " + ", ".join(keyword_list[:5]) + ".")
+        if entity_values:
+            angle_parts.append("The reporting also centers on " + ", ".join(entity_values[:5]) + ".")
+        if article.category:
+            angle_parts.append(f"DUBNEWSAI has classified this as {str(article.category).replace('_', ' ')} coverage.")
+
+        limitation_sentence = (
+            "The publisher page is currently blocking automated full-text extraction, so this page is showing a "
+            "DUBNEWSAI recovery brief built from the verified article metadata and available source excerpt instead "
+            "of leaving you with a broken truncated snippet."
+        )
+
+        paragraphs = [paragraph for paragraph in [lead_paragraph, context_sentence, " ".join(angle_parts).strip(), limitation_sentence] if paragraph]
+        normalized = cls._paragraphize_content("\n\n".join(paragraphs))
+        return normalized if normalized and len(normalized) >= 320 else None
 
     @classmethod
     def _serialized_article_payload(cls, article: NewsArticle) -> dict:
@@ -389,14 +440,15 @@ class NewsService:
         logger.info("Created article {}", article.title)
         return article
 
-    @staticmethod
+    @classmethod
     async def enrich_article_content(
+        cls,
         db: AsyncSession,
         article: NewsArticle,
         *,
         force: bool = False,
     ) -> NewsArticle:
-        if not force and not NewsService._content_needs_enrichment(article.content, article.description):
+        if not force and not cls._content_needs_enrichment(article.content, article.description):
             return article
 
         extractor = ArticleContentExtractor()
@@ -406,12 +458,33 @@ class NewsService:
             await extractor.close()
 
         if extracted is None:
+            fallback_content = cls._build_recovery_brief(article)
+            if not fallback_content:
+                article.enrichment_status = "blocked"
+                await db.commit()
+                await db.refresh(article)
+                await cls.invalidate_article_cache(article.id)
+                return article
+
+            article.content = fallback_content
+            article.description, article.content = cls._normalize_article_text(article.description, article.content)
+            article.enrichment_status = "limited"
+            article.enriched_at = datetime.now(timezone.utc)
+            analysis = await AIService.analyze_article(article)
+            article.sentiment = NewsSentiment(analysis["sentiment"])
+            article.sentiment_score = analysis["sentiment_score"]
+            article.keywords = analysis["keywords"] or None
+            article.entities = analysis["entities"] or None
+            article.relevance_score = analysis["relevance_score"]
+            await db.commit()
+            await db.refresh(article)
+            await cls.invalidate_article_cache(article.id)
             return article
 
         updated = False
         if extracted.content and (
             force
-            or NewsService._content_needs_enrichment(article.content, article.description)
+            or cls._content_needs_enrichment(article.content, article.description)
             or len(extracted.content) > len((article.content or "").strip())
         ):
             article.content = extracted.content
@@ -430,7 +503,7 @@ class NewsService:
         if not updated:
             return article
 
-        article.description, article.content = NewsService._normalize_article_text(article.description, article.content)
+        article.description, article.content = cls._normalize_article_text(article.description, article.content)
         article.enrichment_status = "processing"
 
         analysis = await AIService.analyze_article(article)
@@ -444,7 +517,7 @@ class NewsService:
 
         await db.commit()
         await db.refresh(article)
-        await NewsService.invalidate_article_cache(article.id)
+        await cls.invalidate_article_cache(article.id)
         return article
 
     @staticmethod
