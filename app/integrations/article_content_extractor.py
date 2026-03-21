@@ -21,24 +21,50 @@ class ArticleContentExtractor:
         "article",
         "main article",
         "[itemprop='articleBody']",
+        "div[itemprop='articleBody']",
+        ".article-body__content",
+        ".article-content__body",
         ".article-body",
         ".article-content",
         ".article__body",
+        ".article__content",
         ".story-body",
         ".story-content",
+        ".story__content",
         ".post-content",
         ".entry-content",
         ".content-body",
+        ".article-text",
+        ".article__text",
+        ".story-text",
+        ".news-article-body",
+        ".body-copy",
         ".wysiwyg",
     )
+    PREFERRED_EMBEDDED_KEYS = {
+        "articlebody",
+        "body",
+        "content",
+        "text",
+        "story",
+        "description",
+        "summary",
+    }
 
     def __init__(self) -> None:
         self.client = httpx.AsyncClient(
             timeout=30,
             follow_redirects=True,
             headers={
-                "User-Agent": "DUBNEWSAI/1.0 (+https://dubnewsai.com; article content extraction)",
-                "Accept": "text/html,application/xhtml+xml",
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/123.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
             },
         )
 
@@ -60,7 +86,7 @@ class ArticleContentExtractor:
             cleaned = cls._clean_text(paragraph)
             if not cleaned:
                 continue
-            if len(cleaned) < 40:
+            if len(cleaned) < 20:
                 continue
             dedupe_key = cleaned.lower()
             if dedupe_key in seen:
@@ -144,24 +170,77 @@ class ArticleContentExtractor:
         )
 
     def _extract_from_dom(self, soup: BeautifulSoup) -> str | None:
+        best_content: str | None = None
         for selector in self.CONTENT_SELECTORS:
-            container = soup.select_one(selector)
-            if container is None:
-                continue
-            for tag_name in ("script", "style", "noscript", "form", "nav", "footer", "aside"):
-                for tag in container.find_all(tag_name):
-                    tag.decompose()
-            paragraphs = [element.get_text(" ", strip=True) for element in container.select("p, h2, h3, li")]
-            content = self._normalize_paragraphs(paragraphs)
-            if content and len(content) >= 800:
-                return content
+            for container in soup.select(selector):
+                for tag_name in ("script", "style", "noscript", "form", "nav", "footer", "aside"):
+                    for tag in container.find_all(tag_name):
+                        tag.decompose()
+                paragraphs = [element.get_text(" ", strip=True) for element in container.select("p, h2, h3, li")]
+                content = self._normalize_paragraphs(paragraphs)
+                if content and len(content) >= 800:
+                    return content
+                if content and (best_content is None or len(content) > len(best_content)):
+                    best_content = content
 
         body = soup.body
         if body is None:
-            return None
+            return best_content
 
         paragraphs = [element.get_text(" ", strip=True) for element in body.select("main p, article p, p")]
-        return self._normalize_paragraphs(paragraphs)
+        fallback_content = self._normalize_paragraphs(paragraphs)
+        if fallback_content and (best_content is None or len(fallback_content) > len(best_content)):
+            return fallback_content
+        return best_content
+
+    def _extract_from_embedded_json(self, soup: BeautifulSoup) -> str | None:
+        candidates: list[str] = []
+
+        def walk(value: object, parent_key: str | None = None) -> None:
+            if isinstance(value, dict):
+                for key, item in value.items():
+                    walk(item, str(key).lower())
+                return
+            if isinstance(value, list):
+                for item in value:
+                    walk(item, parent_key)
+                return
+            if not isinstance(value, str):
+                return
+
+            cleaned = self._clean_text(value)
+            if not cleaned or len(cleaned) < 180:
+                return
+
+            key = (parent_key or "").lower()
+            is_preferred_key = key in self.PREFERRED_EMBEDDED_KEYS or any(token in key for token in ("article", "story", "body", "content", "text"))
+            looks_like_story = cleaned.count(". ") >= 3 or "\n" in value
+            if is_preferred_key and looks_like_story:
+                candidates.append(cleaned)
+
+        for script in soup.find_all("script"):
+            raw_text = script.string or script.get_text(strip=True)
+            if not raw_text:
+                continue
+            script_type = (script.get("type") or "").lower()
+            script_id = (script.get("id") or "").lower()
+            if "ld+json" in script_type:
+                continue
+            if "json" not in script_type and "__next_data__" not in script_id:
+                continue
+
+            try:
+                payload = json.loads(raw_text)
+            except Exception:
+                continue
+            walk(payload)
+
+        if not candidates:
+            return None
+
+        unique_candidates = sorted({candidate for candidate in candidates}, key=len, reverse=True)
+        paragraphs = re.split(r"\n{2,}|(?<=[.!?])\s+(?=[A-Z0-9\"'])", unique_candidates[0])
+        return self._normalize_paragraphs(paragraphs) or unique_candidates[0]
 
     async def extract(self, url: str) -> ExtractedArticleContent | None:
         try:
@@ -177,7 +256,7 @@ class ArticleContentExtractor:
                 tag.decompose()
 
         json_ld = self._extract_from_json_ld(soup)
-        content = json_ld.content or self._extract_from_dom(soup)
+        content = json_ld.content or self._extract_from_dom(soup) or self._extract_from_embedded_json(soup)
         description = json_ld.description or self._extract_meta(soup, "og:description", "description", "twitter:description")
         image_url = json_ld.image_url or self._extract_meta(soup, "og:image", "twitter:image")
 

@@ -33,6 +33,7 @@ class NewsService:
         r"\.\.\.\s*\[\d+\s+chars\]\s*$",
         r"\[\+\d+\s+chars\]\s*$",
     )
+    SOURCE_SNIPPET_PROVIDERS = {"gnews", "newsapi", "currents", "newsdata", "thenewsapi", "mediastack"}
     ARTICLE_LEAD_MAX_CHARS = 420
 
     @staticmethod
@@ -205,6 +206,16 @@ class NewsService:
         if normalized_description and normalized_content == normalized_description:
             return True
         return len(normalized_content) < settings.ARTICLE_MIN_CONTENT_LENGTH
+
+    @classmethod
+    def _should_force_source_extraction(cls, article: NewsArticle) -> bool:
+        provider = (article.primary_provider or "").strip().lower()
+        normalized_content = cls._normalize_text_blob(article.content) or ""
+        if not provider or provider not in cls.SOURCE_SNIPPET_PROVIDERS:
+            return False
+        if cls._has_truncation_marker(normalized_content):
+            return True
+        return 0 < len(normalized_content) < 2200
 
     @staticmethod
     def _extract_keywords(text: str, limit: int = 8) -> list[str]:
@@ -516,8 +527,12 @@ class NewsService:
             )
             article = result.scalar_one_or_none()
             if article is not None:
-                if NewsService._content_needs_enrichment(article.content, article.description):
-                    article = await NewsService.enrich_article_content(db, article)
+                if NewsService._content_needs_enrichment(article.content, article.description) or NewsService._should_force_source_extraction(article):
+                    article = await NewsService.enrich_article_content(
+                        db,
+                        article,
+                        force=NewsService._should_force_source_extraction(article),
+                    )
                 article.view_count += 1
                 await db.commit()
                 await db.refresh(article)
@@ -535,8 +550,12 @@ class NewsService:
         if article is None:
             raise ResourceNotFoundError("Article not found")
 
-        if NewsService._content_needs_enrichment(article.content, article.description):
-            article = await NewsService.enrich_article_content(db, article)
+        if NewsService._content_needs_enrichment(article.content, article.description) or NewsService._should_force_source_extraction(article):
+            article = await NewsService.enrich_article_content(
+                db,
+                article,
+                force=NewsService._should_force_source_extraction(article),
+            )
 
         article.view_count += 1
         await db.commit()
