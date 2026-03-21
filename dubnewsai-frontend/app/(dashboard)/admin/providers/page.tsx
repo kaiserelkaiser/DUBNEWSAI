@@ -5,14 +5,15 @@ import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { ActionStatus } from "@/components/shared/ActionStatus"
 import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner"
 import { PremiumPageHero } from "@/components/ui/premium-page-hero"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/hooks/useAuth"
-import { useAdminPlatformFeatures } from "@/lib/hooks/useEnterprise"
+import { useAdminFeatureAccess, useAdminFeatureAccessUsers } from "@/lib/hooks/useEnterprise"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
-import type { PlatformFeature } from "@/types"
+import type { FeatureAccess } from "@/types"
 
 interface ProviderSummary {
   total_providers: number
@@ -50,10 +51,12 @@ export default function ProvidersAdminPage() {
   const queryClient = useQueryClient()
   const [providers, setProviders] = useState<ProviderRow[]>([])
   const [summary, setSummary] = useState<ProviderSummary | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const isAdmin = user?.role === "admin"
-  const { data: platformFeatures = [] } = useAdminPlatformFeatures()
+  const { data: accessUsers = [] } = useAdminFeatureAccessUsers()
+  const { data: selectedUserFeatures = [] } = useAdminFeatureAccess(selectedUserId)
 
   const fetchData = async (silent = false) => {
     if (!silent) {
@@ -96,16 +99,23 @@ export default function ProvidersAdminPage() {
     await fetchData()
   }
 
-  const updateFeatureVisibility = useMutation({
-    mutationFn: async ({ featureKey, isVisible }: { featureKey: string; isVisible: boolean }) => {
-      const { data } = await apiClient.put<PlatformFeature>(`/admin/platform-features/${featureKey}`, {
-        is_visible: isVisible
+  useEffect(() => {
+    if (!selectedUserId && accessUsers.length) {
+      const firstNonAdmin = accessUsers.find((item) => item.role !== "admin") || accessUsers[0]
+      setSelectedUserId(firstNonAdmin.id)
+    }
+  }, [accessUsers, selectedUserId])
+
+  const updateUserFeatureAccess = useMutation({
+    mutationFn: async ({ userId, featureKey, enabled }: { userId: number; featureKey: string; enabled: boolean }) => {
+      const { data } = await apiClient.put<FeatureAccess[]>(`/admin/feature-access/users/${userId}/${featureKey}`, {
+        enabled
       })
       return data
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["admin", "platform-features"] })
-      await queryClient.invalidateQueries({ queryKey: ["platform-features"] })
+      await queryClient.invalidateQueries({ queryKey: ["admin", "feature-access", selectedUserId] })
+      await queryClient.invalidateQueries({ queryKey: ["feature-access"] })
     }
   })
 
@@ -215,44 +225,76 @@ export default function ProvidersAdminPage() {
         <section className="panel-premium p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="story-kicker">Platform visibility</p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">Show or hide live platform sections</h2>
+              <p className="story-kicker">User feature access</p>
+              <h2 className="mt-3 text-3xl font-semibold text-white">Grant premium workspaces user by user</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-white/56">
-                Toggle any major workspace area without removing its backend implementation. Hidden features disappear from navigation and show a graceful unavailable state when accessed directly.
+                Public users keep News and Market. Signed-in users start with Analytics, Alerts, Settings, and their core workspace. Use this panel to unlock advanced modules like Investor Suite, Competitors, Executive, and Teams for specific accounts.
               </p>
             </div>
           </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {platformFeatures.map((feature) => (
-              <article key={feature.feature_key} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-semibold text-white">{feature.label}</div>
-                    <div className="mt-1 text-[10px] uppercase tracking-[0.24em] text-white/38">{titleCase(feature.category)}</div>
+          <div className="mt-6 grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
+            <div className="space-y-3">
+              {accessUsers.map((account) => (
+                <button
+                  key={account.id}
+                  type="button"
+                  onClick={() => setSelectedUserId(account.id)}
+                  className={`w-full rounded-[1.4rem] border p-4 text-left transition ${
+                    selectedUserId === account.id ? "border-cyan-300/35 bg-cyan-300/[0.08]" : "border-white/10 bg-white/[0.03]"
+                  }`}
+                >
+                  <div className="text-sm font-semibold text-white">{account.full_name || account.email}</div>
+                  <div className="mt-1 text-xs text-white/44">{account.email}</div>
+                  <div className="mt-3 text-[10px] uppercase tracking-[0.22em] text-white/38">{titleCase(account.role)}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              {selectedUserFeatures.filter((feature) => feature.grantable).map((feature) => (
+                <article key={feature.feature_key} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-semibold text-white">{feature.label}</div>
+                      <div className="mt-1 text-[10px] uppercase tracking-[0.24em] text-white/38">{titleCase(feature.category)}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        selectedUserId &&
+                        updateUserFeatureAccess.mutate({
+                          userId: selectedUserId,
+                          featureKey: feature.feature_key,
+                          enabled: !feature.has_access
+                        })
+                      }
+                      className={`rounded-full border px-3 py-2 text-xs transition ${
+                        feature.has_access
+                          ? "border-emerald-400/30 text-emerald-200 hover:border-emerald-300/50"
+                          : "border-white/10 text-white/62 hover:text-white"
+                      }`}
+                      disabled={updateUserFeatureAccess.isPending || !selectedUserId}
+                    >
+                      {feature.has_access ? "Granted" : "Grant access"}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateFeatureVisibility.mutate({
-                        featureKey: feature.feature_key,
-                        isVisible: !feature.is_visible
-                      })
-                    }
-                    className={`rounded-full border px-3 py-2 text-xs transition ${
-                      feature.is_visible
-                        ? "border-emerald-400/30 text-emerald-200 hover:border-emerald-300/50"
-                        : "border-white/10 text-white/62 hover:text-white"
-                    }`}
-                    disabled={updateFeatureVisibility.isPending}
-                  >
-                    {feature.is_visible ? "Visible" : "Hidden"}
-                  </button>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-white/56">
-                  {feature.description || "Feature visibility can be managed here."}
-                </p>
-              </article>
-            ))}
+                  <p className="mt-4 text-sm leading-7 text-white/56">
+                    {feature.description || "Feature access is managed here."}
+                  </p>
+                  <div className="mt-4 text-xs text-white/42">
+                    {feature.granted_by_admin
+                      ? "Enabled by admin grant for this user."
+                      : "Not part of the default signed-in access bundle."}
+                  </div>
+                </article>
+              ))}
+              <ActionStatus
+                isPending={updateUserFeatureAccess.isPending}
+                isSuccess={updateUserFeatureAccess.isSuccess}
+                error={updateUserFeatureAccess.error}
+                successMessage="User access updated."
+              />
+            </div>
           </div>
         </section>
 

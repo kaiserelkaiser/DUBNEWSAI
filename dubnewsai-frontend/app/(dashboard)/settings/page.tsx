@@ -16,15 +16,6 @@ import { useNotifications } from "@/lib/hooks/useNotifications"
 import { useNotificationStore } from "@/lib/store/notificationStore"
 import { formatDateTime, titleCase } from "@/lib/utils/formatters"
 
-const FEATURE_OPTIONS = [
-  { id: "portfolio", label: "Portfolio suite" },
-  { id: "analytics", label: "Analytics" },
-  { id: "news", label: "News intelligence" },
-  { id: "competitors", label: "Competitor center" },
-  { id: "executive", label: "Executive command" },
-  { id: "teams", label: "Team collaboration" }
-]
-
 export default function SettingsPage() {
   const queryClient = useQueryClient()
   const { theme, setTheme } = useTheme()
@@ -42,7 +33,6 @@ export default function SettingsPage() {
     secondary_color: whiteLabel?.secondary_color || "#f59e0b",
     custom_domain: whiteLabel?.custom_domain || "",
     subdomain: whiteLabel?.subdomain || "",
-    enabled_features: whiteLabel?.enabled_features || ["portfolio", "analytics", "news"],
     api_enabled: whiteLabel?.api_enabled ?? true,
     api_rate_limit: whiteLabel?.api_rate_limit || 250,
     is_active: whiteLabel?.is_active ?? true
@@ -71,7 +61,6 @@ export default function SettingsPage() {
         secondary_color: whiteLabel.secondary_color || "#f59e0b",
         custom_domain: whiteLabel.custom_domain || "",
         subdomain: whiteLabel.subdomain || "",
-        enabled_features: whiteLabel.enabled_features || ["portfolio", "analytics", "news"],
         api_enabled: whiteLabel.api_enabled,
         api_rate_limit: whiteLabel.api_rate_limit,
         is_active: whiteLabel.is_active
@@ -86,12 +75,11 @@ export default function SettingsPage() {
         "dubnewsai-brand-preview",
         JSON.stringify({
           primary_color: whiteLabelForm.primary_color,
-          secondary_color: whiteLabelForm.secondary_color,
-          enabled_features: whiteLabelForm.enabled_features
+          secondary_color: whiteLabelForm.secondary_color
         })
       )
     }
-  }, [whiteLabelForm.enabled_features, whiteLabelForm.primary_color, whiteLabelForm.secondary_color])
+  }, [whiteLabelForm.primary_color, whiteLabelForm.secondary_color])
 
   const createApiKey = useMutation({
     mutationFn: async () => {
@@ -106,10 +94,7 @@ export default function SettingsPage() {
 
   const saveWhiteLabel = useMutation({
     mutationFn: async () => {
-      await apiClient.put("/settings/white-label", {
-        ...whiteLabelForm,
-        enabled_features: whiteLabelForm.enabled_features
-      })
+      await apiClient.put("/settings/white-label", whiteLabelForm)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["settings", "white-label"] })
@@ -329,31 +314,6 @@ export default function SettingsPage() {
                   />
                 </label>
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Feature access</div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {FEATURE_OPTIONS.map((feature) => {
-                      const checked = whiteLabelForm.enabled_features.includes(feature.id)
-                      return (
-                        <label key={feature.id} className="flex items-center gap-3 rounded-[1rem] border border-white/10 px-3 py-3 text-sm text-white/70">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setWhiteLabelForm((current) => ({
-                                ...current,
-                                enabled_features: checked
-                                  ? current.enabled_features.filter((item) => item !== feature.id)
-                                  : [...current.enabled_features, feature.id]
-                              }))
-                            }
-                          />
-                          {feature.label}
-                        </label>
-                      )
-                    })}
-                  </div>
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
                   <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Delivery controls</div>
                   <div className="mt-4 space-y-3 text-sm text-white/70">
                     <label className="flex items-center gap-3">
@@ -373,6 +333,12 @@ export default function SettingsPage() {
                       Keep white-label profile active
                     </label>
                   </div>
+                </div>
+                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
+                  <div className="text-[10px] uppercase tracking-[0.28em] text-white/38">Access model</div>
+                  <p className="mt-4 text-sm leading-7 text-white/58">
+                    Feature access is now managed by admins per user instead of through white-label branding settings. Public visitors see News and Market, while signed-in users start with Analytics, Alerts, and Settings plus their default workspace access.
+                  </p>
                 </div>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-3">

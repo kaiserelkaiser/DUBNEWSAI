@@ -10,8 +10,9 @@ import type {
   Competitor,
   CompetitorAnalysis,
   ExecutiveDashboard,
+  FeatureAccess,
+  FeatureAccessUser,
   MarketTrendPrediction,
-  PlatformFeature,
   PredictionUniverseResponse,
   PricePrediction,
   PropertyTrendPrediction,
@@ -31,11 +32,11 @@ export function useCompetitors() {
   })
 }
 
-export function usePlatformFeatures() {
-  return useQuery<PlatformFeature[]>({
-    queryKey: ["platform-features"],
+export function useFeatureAccess() {
+  return useQuery<FeatureAccess[]>({
+    queryKey: ["feature-access"],
     queryFn: async () => {
-      const { data } = await apiClient.get<PlatformFeature[]>("/settings/platform-features")
+      const { data } = await apiClient.get<FeatureAccess[]>("/settings/feature-access")
       return data
     },
     staleTime: 5 * 60 * 1000,
@@ -43,16 +44,30 @@ export function usePlatformFeatures() {
   })
 }
 
-export function useAdminPlatformFeatures() {
+export function useAdminFeatureAccessUsers() {
   const { accessToken, hydrated, user } = useAuthStore()
 
-  return useQuery<PlatformFeature[]>({
-    queryKey: ["admin", "platform-features"],
+  return useQuery<FeatureAccessUser[]>({
+    queryKey: ["admin", "feature-access", "users"],
     queryFn: async () => {
-      const { data } = await apiClient.get<PlatformFeature[]>("/admin/platform-features")
+      const { data } = await apiClient.get<FeatureAccessUser[]>("/admin/feature-access/users")
       return data
     },
     enabled: hydrated && Boolean(accessToken) && user?.role === "admin",
+    retry: false
+  })
+}
+
+export function useAdminFeatureAccess(userId?: number) {
+  const { accessToken, hydrated, user } = useAuthStore()
+
+  return useQuery<FeatureAccess[]>({
+    queryKey: ["admin", "feature-access", userId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<FeatureAccess[]>(`/admin/feature-access/users/${userId}`)
+      return data
+    },
+    enabled: hydrated && Boolean(accessToken) && user?.role === "admin" && Boolean(userId),
     retry: false
   })
 }

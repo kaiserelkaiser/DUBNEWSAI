@@ -5,7 +5,7 @@ import { useMemo } from "react"
 import { usePathname } from "next/navigation"
 
 import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
-import { usePlatformFeatures } from "@/lib/hooks/useEnterprise"
+import { useFeatureAccess } from "@/lib/hooks/useEnterprise"
 import { useAuthStore } from "@/lib/store/authStore"
 
 const FEATURE_PATHS: Array<{ featureKey: string; prefixes: string[] }> = [
@@ -28,20 +28,20 @@ function resolveFeatureKey(pathname: string) {
 
 export function DashboardFeatureShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const { data } = usePlatformFeatures()
-  const { accessToken, hydrated } = useAuthStore()
+  const { data = [] } = useFeatureAccess()
+  const { hydrated } = useAuthStore()
   const featureKey = useMemo(() => resolveFeatureKey(pathname), [pathname])
-  const feature = data?.find((item) => item.feature_key === featureKey)
+  const feature = data.find((item) => item.feature_key === featureKey)
 
-  if (!hydrated || !accessToken) {
+  if (!hydrated) {
     return <>{children}</>
   }
 
-  if (feature && !feature.is_visible) {
+  if (feature && !feature.has_access) {
     return (
       <EmptyStatePanel
-        title={`${feature.label} is hidden right now.`}
-        description="An admin has temporarily removed this feature from the live platform. Re-enable it from admin controls to restore the full workspace experience."
+        title={`${feature.label} is not unlocked for this account.`}
+        description="This section is controlled through admin access grants. News and Market stay open by default, while advanced workspaces are enabled per user."
       />
     )
   }

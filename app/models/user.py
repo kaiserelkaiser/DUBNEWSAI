@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.notification import Notification
     from app.models.portfolio import InvestmentRecommendation, Portfolio, Watchlist
     from app.models.subscription import Subscription
+    from app.models.user_feature_access import UserFeatureAccess
     from app.models.user_preference import UserPreference
     from app.models.white_label import WhiteLabelConfig
 
@@ -67,3 +68,8 @@ class User(BaseModel):
     owned_teams: Mapped[list["Team"]] = relationship(foreign_keys="Team.owner_id")
     team_memberships: Mapped[list["TeamMember"]] = relationship(cascade="all, delete-orphan")
     white_label_configs: Mapped[list["WhiteLabelConfig"]] = relationship(cascade="all, delete-orphan")
+    feature_access_grants: Mapped[list["UserFeatureAccess"]] = relationship(
+        foreign_keys="UserFeatureAccess.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

@@ -7,7 +7,14 @@ from app.database import get_db
 from app.dependencies import get_current_admin
 from app.models.news import NewsArticle
 from app.models.user import User
-from app.schemas.enterprise import PlatformFeatureResponse, PlatformFeatureUpdateRequest
+from app.schemas.enterprise import (
+    AdminFeatureAccessUserResponse,
+    FeatureAccessResponse,
+    PlatformFeatureResponse,
+    PlatformFeatureUpdateRequest,
+    UserFeatureAccessUpdateRequest,
+)
+from app.services.feature_access_service import feature_access_service
 from app.services.platform_feature_service import platform_feature_service
 from app.tasks.news_tasks import fetch_newsapi_articles, fetch_rss_feeds
 
@@ -66,3 +73,62 @@ async def update_platform_feature(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return PlatformFeatureResponse.model_validate(feature)
+
+
+@router.get("/feature-access/users", response_model=list[AdminFeatureAccessUserResponse])
+async def list_feature_access_users(
+    _: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+) -> list[AdminFeatureAccessUserResponse]:
+    users = await feature_access_service.list_users(db)
+    return [
+        AdminFeatureAccessUserResponse.model_validate(
+            {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "role": user.role.value,
+            }
+        )
+        for user in users
+    ]
+
+
+@router.get("/feature-access/users/{user_id}", response_model=list[FeatureAccessResponse])
+async def get_user_feature_access(
+    user_id: int,
+    _: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+) -> list[FeatureAccessResponse]:
+    user = await db.scalar(select(User).where(User.id == user_id))
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    items = await feature_access_service.get_user_feature_access(db, user=user)
+    return [FeatureAccessResponse.model_validate(item) for item in items]
+
+
+@router.put("/feature-access/users/{user_id}/{feature_key}", response_model=list[FeatureAccessResponse])
+async def update_user_feature_access(
+    user_id: int,
+    feature_key: str,
+    payload: UserFeatureAccessUpdateRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+) -> list[FeatureAccessResponse]:
+    user = await db.scalar(select(User).where(User.id == user_id))
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        await feature_access_service.set_user_feature_access(
+            db,
+            target_user_id=user_id,
+            feature_key=feature_key,
+            enabled=payload.enabled,
+            admin_user_id=current_admin.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    items = await feature_access_service.get_user_feature_access(db, user=user)
+    return [FeatureAccessResponse.model_validate(item) for item in items]

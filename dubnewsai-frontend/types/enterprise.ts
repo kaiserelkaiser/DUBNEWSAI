@@ -272,7 +272,6 @@ export interface WhiteLabelConfig {
   secondary_color?: string | null
   custom_domain?: string | null
   subdomain?: string | null
-  enabled_features?: string[] | null
   api_enabled: boolean
   api_rate_limit: number
   is_active: boolean
@@ -280,13 +279,21 @@ export interface WhiteLabelConfig {
   updated_at: string
 }
 
-export interface PlatformFeature {
-  id: number
+export interface FeatureAccess {
   feature_key: string
   label: string
   description?: string | null
   category: string
-  is_visible: boolean
-  sort_order: number
-  updated_at: string
+  public_access: boolean
+  default_authenticated: boolean
+  grantable: boolean
+  has_access: boolean
+  granted_by_admin: boolean
+}
+
+export interface FeatureAccessUser {
+  id: number
+  email: string
+  full_name?: string | null
+  role: string
 }

@@ -27,6 +27,7 @@ from app.models.portfolio import (
 from app.models.sources import ArticleSource, DataProvider, MarketDataSource, ProviderFetchLog
 from app.models.subscription import PaymentHistory, Subscription
 from app.models.user import User
+from app.models.user_feature_access import UserFeatureAccess
 from app.models.user_preference import UserPreference
 from app.models.white_label import WhiteLabelConfig
 
@@ -66,6 +67,7 @@ __all__ = [
     "TeamActivity",
     "TeamMember",
     "User",
+    "UserFeatureAccess",
     "UserPreference",
     "Watchlist",
     "WatchlistItem",

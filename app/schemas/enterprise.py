@@ -104,7 +104,6 @@ class WhiteLabelConfigRequest(BaseModel):
     secondary_color: str | None = None
     custom_domain: str | None = None
     subdomain: str | None = None
-    enabled_features: list[str] = Field(default_factory=list)
     api_enabled: bool = False
     api_rate_limit: int = Field(default=100, ge=10, le=100000)
     is_active: bool = True
@@ -118,7 +117,6 @@ class WhiteLabelConfigResponse(BaseModel):
     secondary_color: str | None = None
     custom_domain: str | None = None
     subdomain: str | None = None
-    enabled_features: list[str] | None = None
     api_enabled: bool
     api_rate_limit: int
     is_active: bool
@@ -172,3 +170,26 @@ class PlatformFeatureResponse(BaseModel):
 
 class PlatformFeatureUpdateRequest(BaseModel):
     is_visible: bool
+
+
+class FeatureAccessResponse(BaseModel):
+    feature_key: str
+    label: str
+    description: str | None = None
+    category: str
+    public_access: bool
+    default_authenticated: bool
+    grantable: bool
+    has_access: bool
+    granted_by_admin: bool
+
+
+class AdminFeatureAccessUserResponse(BaseModel):
+    id: int
+    email: str
+    full_name: str | None = None
+    role: str
+
+
+class UserFeatureAccessUpdateRequest(BaseModel):
+    enabled: bool

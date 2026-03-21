@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { LayoutDashboard } from "lucide-react"
 
 import { EmptyStatePanel } from "@/components/shared/EmptyStatePanel"
-import { usePlatformFeatures } from "@/lib/hooks/useEnterprise"
+import { useFeatureAccess } from "@/lib/hooks/useEnterprise"
 
 interface FeatureGateProps {
   featureKey: string
@@ -19,10 +19,10 @@ export function FeatureGate({
   description,
   children
 }: FeatureGateProps) {
-  const { data } = usePlatformFeatures()
-  const feature = data?.find((item) => item.feature_key === featureKey)
+  const { data = [] } = useFeatureAccess()
+  const feature = data.find((item) => item.feature_key === featureKey)
 
-  if (feature && !feature.is_visible) {
+  if (feature && !feature.has_access) {
     return (
       <div className="space-y-8">
         <EmptyStatePanel

@@ -26,6 +26,11 @@
     --brand-secondary: #22d3ee;
     --brand-primary-rgb: 245 158 11;
     --brand-secondary-rgb: 34 211 238;
+    --workspace-shell-bg: 246 248 252;
+    --workspace-shell-fg: 15 23 42;
+    --workspace-panel: 255 255 255;
+    --workspace-panel-strong: 248 250 252;
+    --workspace-border: 148 163 184;
   }
 
   .dark {
@@ -46,6 +51,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 38 70% 48%;
+    --workspace-shell-bg: 5 5 6;
+    --workspace-shell-fg: 255 255 255;
+    --workspace-panel: 10 13 18;
+    --workspace-panel-strong: 8 10 14;
+    --workspace-border: 255 255 255;
   }
 }
 
@@ -157,5 +167,69 @@
   .reading-body {
     @apply text-[1.03rem] leading-8 tracking-[0.01em] text-white/70 sm:text-[1.08rem] sm:leading-9;
   }
+}
+
+.light body {
+  background-color: rgb(246 248 252);
+  background-image:
+    radial-gradient(circle at top left, rgb(var(--brand-secondary-rgb) / 0.16), transparent 24%),
+    radial-gradient(circle at bottom right, rgb(var(--brand-primary-rgb) / 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.92));
+}
+
+.light .panel-premium,
+.light .panel-deep,
+.light .panel {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  box-shadow: 0 28px 90px -52px rgba(15, 23, 42, 0.22) !important;
+}
+
+.light .input-premium {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: rgb(15 23 42) !important;
+}
+
+.light .input-premium::placeholder {
+  color: rgba(71, 85, 105, 0.58) !important;
+}
+
+.light .action-premium {
+  color: rgb(15 23 42) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(34, 211, 238, 0.2) !important;
+  box-shadow: 0 18px 50px -36px rgba(15, 23, 42, 0.18);
+}
+
+.light .story-kicker {
+  color: rgba(51, 65, 85, 0.58) !important;
+}
+
+.light .story-copy,
+.light .reading-body {
+  color: rgba(51, 65, 85, 0.92) !important;
+}
+
+.light .text-white {
+  color: rgb(15 23 42) !important;
+}
+
+.light [class*="text-white/"] {
+  color: rgba(51, 65, 85, 0.78) !important;
+}
+
+.light [class*="border-white/"] {
+  border-color: rgba(148, 163, 184, 0.26) !important;
+}
+
+.light [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.light [class*="bg-[#050506]"],
+.light [class*="bg-[#080a0e]"],
+.light [class*="bg-[#0a0d12]"] {
+  background-color: rgba(248, 250, 252, 0.92) !important;
 }
 
